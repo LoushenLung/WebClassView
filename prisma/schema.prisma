@@ -1,0 +1,222 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  admin
+  treasurer
+  user
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum FinanceType {
+  IN
+  OUT
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  PENDING
+}
+
+enum AnnouncementPriority {
+  BIASA
+  PENTING
+  URGENT
+}
+
+enum AttendanceStatus {
+  HADIR
+  IZIN
+  SAKIT
+  ALFA
+}
+
+model Profile {
+  id              String         @id // References supabase auth.users.id
+  email           String         @unique
+  fullName        String
+  nickname        String?
+  studentId       String?        @unique
+  role            UserRole       @default(user)
+  classRole       String         @default("Anggota") // e.g., Ketua Kelas, Wakil, Bendahara
+  avatarUrl       String?
+  bioQuote        String?
+  birthDate       DateTime?
+  whatsapp        String?
+  instagram       String?
+  linkedin        String?
+  github          String?
+  academicSkills  String[]       // Array of skills
+  address         String?
+  hideContact     Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  tasksCreated    Task[]         @relation("TasksCreated")
+  transactions    FinanceTransaction[]
+  payments        CashPayment[]  @relation("MemberPayments")
+  verifiedPayments CashPayment[] @relation("VerifiedPayments")
+  announcements   Announcement[]
+  attendances     Attendance[]
+  galleryPosts    GalleryPost[]
+  forumPosts      ForumPost[]
+  forumComments   ForumComment[]
+  taskProgresses  TaskProgress[]
+}
+
+model Schedule {
+  id          String   @id @default(uuid())
+  day         String   // e.g. "Senin", "Selasa"
+  subjectName String
+  teacherName String
+  room        String
+  startTime   String   // e.g. "08:00"
+  endTime     String   // e.g. "09:30"
+  notes       String?
+}
+
+model Task {
+  id          String         @id @default(uuid())
+  title       String
+  description String
+  deadline    DateTime
+  priority    TaskPriority   @default(MEDIUM)
+  subjectName String         // e.g. "Matematika"
+  attachmentUrl String?
+  attachmentName String?
+  linkUrl     String?
+  createdById String
+  createdBy   Profile        @relation("TasksCreated", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  progresses  TaskProgress[]
+}
+
+model TaskProgress {
+  id        String     @id @default(uuid())
+  taskId    String
+  task      Task       @fields([taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      Profile    @fields([userId], references: [id], onDelete: Cascade)
+  status    TaskStatus @default(TODO)
+  updatedAt DateTime   @updatedAt
+
+  @@unique([taskId, userId])
+}
+
+model Material {
+  id          String   @id @default(uuid())
+  subjectName String
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String   // e.g. "PDF", "PPT", "DOCX", "Video"
+  semester    Int      @default(1)
+  uploaderName String
+  createdAt   DateTime @default(now())
+}
+
+model FinanceTransaction {
+  id          String      @id @default(uuid())
+  type        FinanceType
+  amount      Float
+  category    String      // e.g. "Kas", "Uang Denda", "Beli Sapu"
+  description String
+  receiptUrl  String?
+  createdById String
+  createdBy   Profile     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime    @default(now())
+}
+
+model CashPayment {
+  id          String        @id @default(uuid())
+  userId      String
+  user        Profile       @relation("MemberPayments", fields: [userId], references: [id])
+  periodWeek  Int
+  periodYear  Int
+  status      PaymentStatus @default(UNPAID)
+  verifiedById String?
+  verifiedBy  Profile?      @relation("VerifiedPayments", fields: [verifiedById], references: [id])
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([userId, periodWeek, periodYear])
+}
+
+model Announcement {
+  id            String               @id @default(uuid())
+  title         String
+  content       String
+  priorityLevel AnnouncementPriority @default(BIASA)
+  pinned        Boolean              @default(false)
+  createdById   String
+  createdBy     Profile              @relation(fields: [createdById], references: [id])
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  userId      String
+  user        Profile          @relation(fields: [userId], references: [id])
+  date        DateTime         // Day of attendance (YYYY-MM-DD)
+  status      AttendanceStatus @default(HADIR)
+  checkInTime DateTime?
+  createdAt   DateTime         @default(now())
+
+  @@unique([userId, date])
+}
+
+model GalleryPost {
+  id          String   @id @default(uuid())
+  albumName   String   // e.g. "Study Tour"
+  imageUrl    String
+  description String?
+  uploadedById String
+  uploadedBy  Profile  @relation(fields: [uploadedById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model ForumPost {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  subjectName String?  // Optional subject tag
+  createdById String
+  createdBy   Profile  @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  upvotes     Int      @default(0)
+
+  comments    ForumComment[]
+}
+
+model ForumComment {
+  id          String    @id @default(uuid())
+  postId      String
+  post        ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  content     String
+  createdById String
+  createdBy   Profile   @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  isAnswer    Boolean   @default(false)
+}
