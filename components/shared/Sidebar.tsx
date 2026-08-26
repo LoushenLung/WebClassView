@@ -264,12 +264,12 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
   return (
     <>
       {/* ── Desktop Sidebar (fixed left) ── */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 bg-slate-950 border-r border-slate-800/60">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 bg-[#0B0B1A] border-r border-slate-800/60">
         <SidebarContent />
       </aside>
 
       {/* ── Mobile Top Bar ── */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-slate-800/60 bg-slate-950/95 backdrop-blur-md px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-slate-800/60 bg-[#0B0B1A]/95 backdrop-blur-md px-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-indigo-400" />
           <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-base font-extrabold tracking-tight text-transparent">
@@ -309,7 +309,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
             onClick={() => setMobileOpen(false)}
           />
           {/* Drawer */}
-          <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 border-r border-slate-800/60 animate-in slide-in-from-left-2 duration-200">
+          <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[#0B0B1A] border-r border-slate-800/60 animate-in slide-in-from-left-2 duration-200">
             {/* Close button */}
             <button
               onClick={() => setMobileOpen(false)}

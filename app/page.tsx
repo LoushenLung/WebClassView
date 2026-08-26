@@ -54,18 +54,18 @@ export default async function HomePage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 px-6 py-12 text-white shadow-2xl md:px-12 md:py-16">
-        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"></div>
-        <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"></div>
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0B0B1A] via-[#15152D] to-purple-950 px-6 py-12 text-white shadow-[0_0_40px_rgba(138,43,226,0.15)] border border-purple-500/20 md:px-12 md:py-16">
+        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl"></div>
+        <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl"></div>
 
         <div className="relative z-10 grid gap-8 md:grid-cols-2 md:items-center">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 px-3.5 py-1 text-xs font-semibold text-indigo-300 ring-1 ring-indigo-500/30">
-              <Sparkles className="h-3.5 w-3.5" />
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3.5 py-1 text-xs font-semibold text-purple-300 ring-1 ring-purple-500/30">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
               Selamat Datang di Hub RPL 1
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
-              Web Kelas Digital <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">RPL 1 2026/2027</span>
+              Web Kelas Digital <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">RPL 1 2026/2027</span>
             </h1>
             <p className="max-w-md text-sm text-slate-300 sm:text-base">
               Pusat informasi, transparansi keuangan kas kelas, koordinasi akademik, presensi harian, dan album kenangan bersama.
@@ -73,14 +73,14 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Link 
                 href="/kas" 
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 hover:shadow-indigo-600/40 transition-all cursor-pointer"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 text-sm font-bold text-white shadow-[0_0_15px_rgba(138,43,226,0.5)] hover:from-purple-500 hover:to-blue-500 hover:shadow-[0_0_20px_rgba(138,43,226,0.7)] transition-all cursor-pointer"
               >
                 <Wallet className="mr-2 h-4 w-4" />
                 Bayar Uang Kas
               </Link>
               <Link 
                 href="/jadwal" 
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700 px-5 text-sm font-bold hover:bg-slate-800 transition-all cursor-pointer"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-white/5 backdrop-blur-md border border-white/10 px-5 text-sm font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Lihat Jadwal
@@ -106,7 +106,7 @@ export default async function HomePage() {
       {/* 2. Responsive Bento Grid Dashboard */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Card 1: Pinned Announcements */}
-        <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md flex flex-col md:col-span-2">
+        <div className="rounded-3xl border border-white/10 bg-[#15152D]/80 backdrop-blur-md p-6 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white flex flex-col md:col-span-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
             <h2 className="flex items-center gap-2 font-bold text-lg text-slate-950 dark:text-white">
               <Megaphone className="h-5 w-5 text-indigo-500" />
@@ -145,7 +145,7 @@ export default async function HomePage() {
         </div>
 
         {/* Card 2: Today's Schedule Highlight */}
-        <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
+        <div className="rounded-3xl border border-white/10 bg-[#15152D]/80 backdrop-blur-md p-6 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
             <h2 className="flex items-center gap-2 font-bold text-lg text-slate-950 dark:text-white">
               <Calendar className="h-5 w-5 text-indigo-500" />
@@ -178,7 +178,7 @@ export default async function HomePage() {
         </div>
 
         {/* Card 3: Cash & Finance Info */}
-        <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
+        <div className="rounded-3xl border border-white/10 bg-[#15152D]/80 backdrop-blur-md p-6 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
             <h2 className="flex items-center gap-2 font-bold text-lg text-slate-950 dark:text-white">
               <Wallet className="h-5 w-5 text-indigo-500" />
@@ -211,7 +211,7 @@ export default async function HomePage() {
         </div>
 
         {/* Card 4: Attendance Widget */}
-        <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
+        <div className="rounded-3xl border border-white/10 bg-[#15152D]/80 backdrop-blur-md p-6 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
             <h2 className="flex items-center gap-2 font-bold text-lg text-slate-950 dark:text-white">
               <CheckCircle className="h-5 w-5 text-indigo-500" />
@@ -238,7 +238,7 @@ export default async function HomePage() {
         </div>
 
         {/* Card 5: Fast Links to Other Modules */}
-        <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
+        <div className="rounded-3xl border border-white/10 bg-[#15152D]/80 backdrop-blur-md p-6 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
             <h2 className="flex items-center gap-2 font-bold text-lg text-slate-950 dark:text-white">
               <ExternalLink className="h-5 w-5 text-indigo-500" />
@@ -268,7 +268,7 @@ export default async function HomePage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {orgMembers.map((member) => (
-            <div key={member.id} className="group relative overflow-hidden rounded-3xl border border-slate-200/50 bg-white p-5 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md transition-all hover:shadow-md hover:scale-[1.01]">
+            <div key={member.id} className="group relative overflow-hidden rounded-3xl border border-white/10 bg-[#15152D]/80 p-5 shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white backdrop-blur-md transition-all hover:shadow-[0_0_20px_rgba(138,43,226,0.3)] hover:scale-[1.01]">
               <div className="flex flex-col items-center text-center">
                 <img 
                   src={member.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80'} 

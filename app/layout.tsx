@@ -33,7 +33,7 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-200">
+      <body className="min-h-full flex flex-col bg-[#0B0B1A] text-white selection:bg-purple-500/30 transition-colors duration-200">
         <Sidebar currentUser={currentUser} allUsers={allUsers} />
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-6 lg:pl-72 pb-24 lg:pb-12">
           {children}
