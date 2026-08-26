@@ -17,7 +17,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 1: Foundation & Infrastructure
 
 - [ ] 1. Buat file foundation dan infrastruktur dasar
-  - [-] 1.1 Buat `lib/types.ts` — Type system terpusat [M]
+  - [x] 1.1 Buat `lib/types.ts` — Type system terpusat [M]
     - Definisikan `ActionResult<T>` sebagai discriminated union `{ success: true; data: T } | { success: false; error: string }`
     - Definisikan `UserRole = "admin" | "bendahara" | "murid"`
     - Definisikan `PaymentStatus`, `AttendanceStatus`, `AnnouncementStatus` sebagai union types
@@ -27,46 +27,46 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Re-export semua Prisma model types (`User`, `DuesPeriod`, `DuesPayment`, dst.)
     - _Req: 13.1, 13.5 | Design §6_
 
-  - [-] 1.2 Buat `lib/env.ts` — Startup validation [S]
+  - [x] 1.2 Buat `lib/env.ts` — Startup validation [S]
     - Validasi keberadaan env vars wajib: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
     - Lempar `Error` dengan nama variable yang hilang jika ada yang undefined — fail fast, bukan gagal diam-diam
     - File ini akan di-import oleh `lib/db.ts` dan `lib/cloudinary.ts`
     - _Req: 17.6 | Design §13_
 
-  - [~] 1.3 Buat `lib/db.ts` — Prisma singleton [S]
+  - [x] 1.3 Buat `lib/db.ts` — Prisma singleton [S]
     - Gunakan pola `globalThis.__prisma` untuk mencegah multiple PrismaClient instances di Vercel serverless
     - Log queries di `development`, hanya errors di `production`
     - Import `lib/env.ts` di bagian atas untuk early validation
     - Export `prisma` sebagai named export (bukan default)
     - _Req: 17.5 | Design §12_
 
-  - [-] 1.4 Buat `.env.example` di root project [S]
+  - [x] 1.4 Buat `.env.example` di root project [S]
     - Cantumkan semua 8 env vars dengan komentar inline untuk setiap variable
     - Format: `VARIABLE_NAME=  # deskripsi singkat`
     - Kelompokkan: Supabase public, Supabase server-only, Database, Cloudinary public, Cloudinary server-only, App
     - TIDAK mencantumkan nilai aktual — hanya template kosong
     - _Req: 17.1, 17.2 | Design §13_
 
-  - [~] 1.5 Buat `lib/supabase/server.ts`, `lib/supabase/client.ts`, `lib/supabase/middleware.ts` [M]
+  - [x] 1.5 Buat `lib/supabase/server.ts`, `lib/supabase/client.ts`, `lib/supabase/middleware.ts` [M]
     - `server.ts`: fungsi `createClient()` menggunakan `createServerClient` dari `@supabase/ssr` dengan `cookies()` dari `next/headers`
     - `client.ts`: fungsi `getSupabaseBrowserClient()` sebagai singleton `createBrowserClient` — hanya untuk Client Components
     - `middleware.ts`: fungsi `updateSession(request)` yang refresh cookie dan redirect ke `/login` jika tidak ada session valid
     - Public routes yang dikecualikan dari redirect: `/login`, `/auth/**`, `/api/ping`
     - _Req: 1.1, 1.4, 1.5 | Design §5_
 
-  - [~] 1.6 Buat root `middleware.ts` — Route protection [S]
+  - [-] 1.6 Buat root `middleware.ts` — Route protection [S]
     - Import dan panggil `updateSession` dari `@/lib/supabase/middleware`
     - Konfigurasi `matcher` untuk exclude static files, images, favicon, sitemap, robots
     - _Req: 1.4 | Design §5_
 
-  - [~] 1.7 Buat `lib/utils.ts` — Shared utility functions [S]
+  - [x] 1.7 Buat `lib/utils.ts` — Shared utility functions [S]
     - Implementasikan `formatError(error: unknown): string` yang memetakan Prisma codes (`P2002`, `P2025`), Cloudinary errors, dan JWT/session errors ke pesan bahasa Indonesia yang aman
     - Panggil `console.error("[Server Error]", error)` sebelum return dari catch block
     - Implementasikan `formatCurrency(amount: number): string` untuk format Rupiah
     - Implementasikan `formatDate(date: Date | string): string` untuk format tanggal Indonesia
     - _Req: 13.2, 13.4 | Design §11_
 
-  - [~] 1.8 Buat `lib/cloudinary.ts` — Cloudinary server-only integration [M]
+  - [x] 1.8 Buat `lib/cloudinary.ts` — Cloudinary server-only integration [M]
     - Import `lib/env.ts` dan validasi `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` di module load — lempar Error jika ada yang missing
     - `CLOUDINARY_API_SECRET` TIDAK boleh memiliki prefix `NEXT_PUBLIC_`
     - Ekspor folder constants: `GALLERY_FOLDER`, `MATERI_FOLDER`, `AVATAR_FOLDER`, `PROOF_FOLDER`
@@ -75,7 +75,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Implementasikan `getOptimizedUrl(cloudinaryUrl, width?)` — pure string manipulation, tidak ada network call
     - _Req: 15.1–15.5 | Design §10_
 
-  - [~] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
+  - [-] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
     - Implementasikan `getCurrentUser()` menggunakan `cache()` dari React untuk deduplicate `supabase.auth.getUser()` per render pass
     - Join dengan `prisma.user.findUnique` untuk mendapatkan `role` dari `public.users`
     - Return type: `CurrentUser | null`
@@ -88,7 +88,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 2: Database Schema & Migrations
 
 - [ ] 2. Buat dan terapkan database schema
-  - [~] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
+  - [-] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
     - Konfigurasi `datasource db` dengan `url = env("DATABASE_URL")` (port 6543, pgbouncer) dan `directUrl = env("DIRECT_URL")` (port 5432, migrate only)
     - Definisikan semua 12 model: `User`, `DuesPeriod`, `DuesPayment`, `Announcement`, `Schedule`, `PhotoGallery`, `Photo`, `AuditLog`, `Attendance`, `Material`, `ForumPost`, `ForumComment`
     - `User.id`: `@id @db.Uuid` — mirror dari `auth.users.id`

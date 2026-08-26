@@ -1,222 +1,223 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-enum UserRole {
-  admin
-  treasurer
-  user
+datasource db {
+  provider = "postgresql"
 }
 
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
+// ── USER ─────────────────────────────────────────────────────
+// id mirrors auth.users.id (UUID), managed by Supabase Auth trigger
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  name      String
+  role      String   @default("murid")  // "admin" | "bendahara" | "murid"
+  avatarUrl String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  duesPayments  DuesPayment[]
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+  attendances   Attendance[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+
+  @@index([role])
+  @@map("users")
 }
 
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  DONE
+// ── DUES PERIOD ──────────────────────────────────────────────
+model DuesPeriod {
+  id         String   @id @default(cuid())
+  name       String
+  amount     Int                          // Rupiah, no decimals — NEVER Float/Decimal
+  startDate  DateTime @map("start_date")
+  endDate    DateTime @map("end_date")
+  isArchived Boolean  @default(false) @map("is_archived")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  duesPayments DuesPayment[]
+
+  @@index([isArchived])
+  @@index([startDate])
+  @@map("dues_periods")
 }
 
-enum FinanceType {
-  IN
-  OUT
+// ── DUES PAYMENT ─────────────────────────────────────────────
+// @@unique prevents duplicate payment per student per period
+model DuesPayment {
+  id                     String    @id @default(cuid())
+  studentId              String    @db.Uuid @map("student_id")
+  duePeriodId            String    @map("due_period_id")
+  status                 String    @default("pending")  // "pending" | "paid" | "overdue"
+  proofImageUrl          String?   @map("proof_image_url")
+  proofImageCloudinaryId String?   @map("proof_image_cloudinary_id")
+  paidAt                 DateTime? @map("paid_at")
+  notes                  String?
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  student User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  period  DuesPeriod @relation(fields: [duePeriodId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, duePeriodId])
+  @@index([status])
+  @@index([studentId])
+  @@map("dues_payments")
 }
 
-enum PaymentStatus {
-  PAID
-  UNPAID
-  PENDING
-}
-
-enum AnnouncementPriority {
-  BIASA
-  PENTING
-  URGENT
-}
-
-enum AttendanceStatus {
-  HADIR
-  IZIN
-  SAKIT
-  ALFA
-}
-
-model Profile {
-  id              String         @id // References supabase auth.users.id
-  email           String         @unique
-  fullName        String
-  nickname        String?
-  studentId       String?        @unique
-  role            UserRole       @default(user)
-  classRole       String         @default("Anggota") // e.g., Ketua Kelas, Wakil, Bendahara
-  avatarUrl       String?
-  bioQuote        String?
-  birthDate       DateTime?
-  whatsapp        String?
-  instagram       String?
-  linkedin        String?
-  github          String?
-  academicSkills  String[]       // Array of skills
-  address         String?
-  hideContact     Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  // Relations
-  tasksCreated    Task[]         @relation("TasksCreated")
-  transactions    FinanceTransaction[]
-  payments        CashPayment[]  @relation("MemberPayments")
-  verifiedPayments CashPayment[] @relation("VerifiedPayments")
-  announcements   Announcement[]
-  attendances     Attendance[]
-  galleryPosts    GalleryPost[]
-  forumPosts      ForumPost[]
-  forumComments   ForumComment[]
-  taskProgresses  TaskProgress[]
-}
-
-model Schedule {
-  id          String   @id @default(uuid())
-  day         String   // e.g. "Senin", "Selasa"
-  subjectName String
-  teacherName String
-  room        String
-  startTime   String   // e.g. "08:00"
-  endTime     String   // e.g. "09:30"
-  notes       String?
-}
-
-model Task {
-  id          String         @id @default(uuid())
-  title       String
-  description String
-  deadline    DateTime
-  priority    TaskPriority   @default(MEDIUM)
-  subjectName String         // e.g. "Matematika"
-  attachmentUrl String?
-  attachmentName String?
-  linkUrl     String?
-  createdById String
-  createdBy   Profile        @relation("TasksCreated", fields: [createdById], references: [id])
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  progresses  TaskProgress[]
-}
-
-model TaskProgress {
-  id        String     @id @default(uuid())
-  taskId    String
-  task      Task       @fields([taskId], references: [id], onDelete: Cascade)
-  userId    String
-  user      Profile    @fields([userId], references: [id], onDelete: Cascade)
-  status    TaskStatus @default(TODO)
-  updatedAt DateTime   @updatedAt
-
-  @@unique([taskId, userId])
-}
-
-model Material {
-  id          String   @id @default(uuid())
-  subjectName String
-  title       String
-  description String?
-  fileUrl     String
-  fileType    String   // e.g. "PDF", "PPT", "DOCX", "Video"
-  semester    Int      @default(1)
-  uploaderName String
-  createdAt   DateTime @default(now())
-}
-
-model FinanceTransaction {
-  id          String      @id @default(uuid())
-  type        FinanceType
-  amount      Float
-  category    String      // e.g. "Kas", "Uang Denda", "Beli Sapu"
-  description String
-  receiptUrl  String?
-  createdById String
-  createdBy   Profile     @relation(fields: [createdById], references: [id])
-  createdAt   DateTime    @default(now())
-}
-
-model CashPayment {
-  id          String        @id @default(uuid())
-  userId      String
-  user        Profile       @relation("MemberPayments", fields: [userId], references: [id])
-  periodWeek  Int
-  periodYear  Int
-  status      PaymentStatus @default(UNPAID)
-  verifiedById String?
-  verifiedBy  Profile?      @relation("VerifiedPayments", fields: [verifiedById], references: [id])
-  updatedAt   DateTime      @updatedAt
-
-  @@unique([userId, periodWeek, periodYear])
-}
-
+// ── ANNOUNCEMENT ─────────────────────────────────────────────
 model Announcement {
-  id            String               @id @default(uuid())
-  title         String
-  content       String
-  priorityLevel AnnouncementPriority @default(BIASA)
-  pinned        Boolean              @default(false)
-  createdById   String
-  createdBy     Profile              @relation(fields: [createdById], references: [id])
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-}
-
-model Attendance {
-  id          String           @id @default(uuid())
-  userId      String
-  user        Profile          @relation(fields: [userId], references: [id])
-  date        DateTime         // Day of attendance (YYYY-MM-DD)
-  status      AttendanceStatus @default(HADIR)
-  checkInTime DateTime?
-  createdAt   DateTime         @default(now())
-
-  @@unique([userId, date])
-}
-
-model GalleryPost {
-  id          String   @id @default(uuid())
-  albumName   String   // e.g. "Study Tour"
-  imageUrl    String
-  description String?
-  uploadedById String
-  uploadedBy  Profile  @relation(fields: [uploadedById], references: [id])
-  createdAt   DateTime @default(now())
-}
-
-model ForumPost {
-  id          String   @id @default(uuid())
+  id          String    @id @default(cuid())
   title       String
   content     String
-  subjectName String?  // Optional subject tag
-  createdById String
-  createdBy   Profile  @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  upvotes     Int      @default(0)
+  authorId    String    @db.Uuid @map("author_id")
+  status      String    @default("draft")   // "draft" | "published"
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  comments    ForumComment[]
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([publishedAt])
+  @@map("announcements")
+}
+
+// ── SCHEDULE ─────────────────────────────────────────────────
+// @@unique on (dayOfWeek, periodOrder) — one cell per grid slot
+model Schedule {
+  id          String   @id @default(cuid())
+  dayOfWeek   Int      @map("day_of_week")    // 0 = Monday … 4 = Friday
+  periodOrder Int      @map("period_order")   // 1–8
+  periodLabel String   @map("period_label")   // "08:00–09:00"
+  subject     String?
+  teacher     String?
+  room        String?
+  isBreak     Boolean  @default(false) @map("is_break")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([dayOfWeek, periodOrder])
+  @@index([dayOfWeek])
+  @@map("schedule")
+}
+
+// ── PHOTO GALLERY + PHOTO ────────────────────────────────────
+model PhotoGallery {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  eventDate   DateTime @map("event_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  photos Photo[]
+
+  @@index([eventDate])
+  @@map("photo_galleries")
+}
+
+model Photo {
+  id            String   @id @default(cuid())
+  galleryId     String   @map("gallery_id")
+  cloudinaryUrl String   @map("cloudinary_url")
+  cloudinaryId  String   @map("cloudinary_id")
+  caption       String?
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+
+  gallery PhotoGallery @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+
+  @@index([galleryId])
+  @@map("photos")
+}
+
+// ── AUDIT LOG ────────────────────────────────────────────────
+// userId SetNull so audit history survives user deletion
+// No INSERT/UPDATE/DELETE from app — trigger only (enforced by RLS)
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  @db.Uuid @map("user_id")
+  action    String
+  tableName String   @map("table_name")
+  recordId  String   @map("record_id")
+  oldValues Json?    @map("old_values")
+  newValues Json?    @map("new_values")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ── ATTENDANCE ───────────────────────────────────────────────
+// @@unique([studentId, date]) — one record per student per day
+model Attendance {
+  id          String    @id @default(cuid())
+  studentId   String    @db.Uuid @map("student_id")
+  date        DateTime  @db.Date
+  status      String    // "HADIR" | "IZIN" | "SAKIT" | "ALFA"
+  checkInTime DateTime? @map("check_in_time")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([date])
+  @@map("attendances")
+}
+
+// ── MATERIAL ─────────────────────────────────────────────────
+// fileUrl XOR externalLink — enforced by Zod schema, not DB constraint
+model Material {
+  id           String   @id @default(cuid())
+  title        String
+  subjectName  String   @map("subject_name")
+  description  String?
+  fileUrl      String?  @map("file_url")
+  cloudinaryId String?  @map("cloudinary_id")
+  externalLink String?  @map("external_link")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([subjectName])
+  @@map("materials")
+}
+
+// ── FORUM POST + COMMENT ─────────────────────────────────────
+model ForumPost {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  createdById String   @db.Uuid @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  comments ForumComment[]
+  author   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("forum_posts")
 }
 
 model ForumComment {
-  id          String    @id @default(uuid())
-  postId      String
-  post        ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  postId      String   @map("post_id")
   content     String
-  createdById String
-  createdBy   Profile   @relation(fields: [createdById], references: [id])
-  createdAt   DateTime  @default(now())
-  isAnswer    Boolean   @default(false)
+  createdById String   @db.Uuid @map("created_by_id")
+  isAnswer    Boolean  @default(false) @map("is_answer")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("forum_comments")
 }
