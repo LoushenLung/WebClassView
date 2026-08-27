@@ -126,7 +126,7 @@ export default function ForumClient({ posts, currentUserId }: ForumClientProps) 
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-950 dark:text-white">Semua Tanggapan</h3>
           {activePost.comments.length > 0 ? (
-            activePost.comments.map((comm) => (
+            activePost.comments.map((comm: ForumComment) => (
               <div
                 key={comm.id}
                 className={`rounded-2xl border p-4 text-xs space-y-2 bg-white dark:bg-slate-900/30 ${
@@ -229,7 +229,7 @@ export default function ForumClient({ posts, currentUserId }: ForumClientProps) 
       <div className="grid gap-6">
         {posts.length > 0 ? (
           posts.map((post) => {
-            const hasSolved = post.comments.some((c) => c.isAnswer);
+            const hasSolved = post.comments.some((c: ForumComment) => c.isAnswer);
             return (
               <div
                 key={post.id}

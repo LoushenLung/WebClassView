@@ -36,7 +36,7 @@ export default function GalleryClient({ galleries }: GalleryClientProps) {
 
         <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 [&>div]:mb-4">
           {activeGallery.photos.length > 0 ? (
-            activeGallery.photos.map((photo) => (
+            activeGallery.photos.map((photo: Photo) => (
               <div
                 key={photo.id}
                 onClick={() => setActivePhoto(photo)}

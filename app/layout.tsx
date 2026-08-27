@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/shared/Sidebar";
 import { getCurrentUser } from "@/lib/actions/guards";
 import { getProfiles } from "@/actions/profile.actions";
+import type { User } from "@/lib/types";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,10 +26,23 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [currentUser, allUsers] = await Promise.all([
+  const [currentUserAuth, allUsers] = await Promise.all([
     getCurrentUser(),
     getProfiles(),
   ]);
+
+  // Map CurrentUser → User shape expected by Sidebar (add missing fields with defaults)
+  const currentUser: User | null = currentUserAuth
+    ? {
+        id: currentUserAuth.id,
+        email: currentUserAuth.email,
+        name: currentUserAuth.name,
+        role: currentUserAuth.role,
+        avatarUrl: currentUserAuth.avatarUrl,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    : null;
 
   return (
     <html

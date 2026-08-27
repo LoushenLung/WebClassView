@@ -1,13 +1,12 @@
 /**
- * middleware.ts — Root route-protection middleware
+ * proxy.ts — Root route-protection proxy (Next.js 16 convention)
  *
- * Delegates to updateSession() in lib/supabase/middleware.ts which:
+ * Next.js 16 renamed middleware.ts → proxy.ts. This file is the canonical
+ * entry point. It delegates to updateSession() in lib/supabase/middleware.ts
+ * which:
  * - Refreshes the Supabase session cookie on every request
  * - Redirects unauthenticated users to /login
  * - Skips redirect for public routes: /login, /auth/**, /api/ping
- *
- * Note: In Next.js 16 this file convention is deprecated in favour of
- * proxy.ts — see proxy.ts for the canonical entry point.
  *
  * Req: 1.4 | Design §5
  */
@@ -15,7 +14,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 
