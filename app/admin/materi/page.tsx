@@ -1,5 +1,5 @@
 import React from 'react';
-import { getMaterials } from '@/actions/schedule.actions';
+import { getMaterials } from '@/actions/material.actions';
 import AdminMaterialCRUD from './_components/AdminMaterialCRUD';
 
 export default async function AdminMaterialsPage() {

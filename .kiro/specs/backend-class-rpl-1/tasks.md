@@ -153,46 +153,46 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 
 ### Group 3: Validation Schemas
 
-- [ ] 3. Buat Zod validation schemas per domain
-  - [~] 3.1 Buat `lib/validations/kas.ts` [S]
+- [x] 3. Buat Zod validation schemas per domain
+  - [x] 3.1 Buat `lib/validations/kas.ts` [S]
     - `createDuesPeriodSchema`: `name` (string 1–100), `amount` (int 1–999_999_999), `startDate` (z.string().datetime()), `endDate` (z.string().datetime())
     - Tambah `.refine()` untuk `endDate > startDate` dengan pesan error bahasa Indonesia
     - `markPaymentPaidSchema`: `paymentId` (string min 1), `notes` (string max 500, optional)
     - Export TypeScript types via `z.infer<>`
     - _Req: 4.1, 4.2 | Design §7_
 
-  - [~] 3.2 Buat `lib/validations/gallery.ts` [S]
+  - [x] 3.2 Buat `lib/validations/gallery.ts` [S]
     - `ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const`
     - `MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024`
     - `createGallerySchema`: `title` (string 1–200), `description` (string max 500, optional), `eventDate` (datetime)
     - `uploadPhotoSchema`: `galleryId` (string min 1), `mimeType` (z.enum(ALLOWED_MIME_TYPES) dengan custom errorMap), `fileSizeBytes` (int max 5MB dengan pesan error bahasa Indonesia), `caption` (string max 300, optional)
     - _Req: 6.1, 6.2, 5.2 | Design §7_
 
-  - [~] 3.3 Buat `lib/validations/announcement.ts` [S]
+  - [x] 3.3 Buat `lib/validations/announcement.ts` [S]
     - `createAnnouncementSchema`: `title` (string 1–200), `content` (string min 1)
     - `updateAnnouncementSchema`: `id` (string min 1), `title` (string 1–200, optional), `content` (string min 1, optional)
     - _Req: 7.2 | Design §7_
 
-  - [~] 3.4 Buat `lib/validations/schedule.ts` [S]
+  - [x] 3.4 Buat `lib/validations/schedule.ts` [S]
     - `upsertScheduleSlotSchema`: `dayOfWeek` (int 0–4), `periodOrder` (int 1–8), `periodLabel` (string 1–20), `subject/teacher/room` (optional strings), `isBreak` (boolean, default false)
     - Tambah `.superRefine()` yang reject jika `isBreak = false` dan `subject` kosong/whitespace — error path: `["subject"]`
     - _Req: 8.1, 8.2 | Design §7_
 
-  - [~] 3.5 Buat `lib/validations/attendance.ts` [S]
+  - [x] 3.5 Buat `lib/validations/attendance.ts` [S]
     - `recordAttendanceSchema`: `studentId` (z.string().uuid() dengan pesan error), `date` (z.string().regex(/^\d{4}-\d{2}-\d{2}$/) dengan pesan error), `status` (z.enum(["HADIR", "IZIN", "SAKIT", "ALFA"]))
     - _Req: 9.1, 14.3 | Design §7_
 
-  - [~] 3.6 Buat `lib/validations/material.ts` [S]
+  - [x] 3.6 Buat `lib/validations/material.ts` [S]
     - `createMaterialSchema`: `title` (1–200), `subjectName` (1–100), `description` (max 500, optional), `fileUrl` (z.string().url(), optional), `cloudinaryId` (string, optional), `externalLink` (z.string().url(), optional)
     - Tambah `.superRefine()` untuk XOR constraint: reject jika keduanya absent, reject jika keduanya present
     - _Req: 10.1 | Design §7_
 
-  - [~] 3.7 Buat `lib/validations/forum.ts` [S]
+  - [x] 3.7 Buat `lib/validations/forum.ts` [S]
     - `createPostSchema`: `title` (string 1–200), `content` (string min 1)
     - `createCommentSchema`: `postId` (string min 1), `content` (string min 1)
     - _Req: 11.1, 11.2 | Design §7_
 
-  - [~] 3.8 Buat `lib/validations/profile.ts` [S]
+  - [x] 3.8 Buat `lib/validations/profile.ts` [S]
     - `updateProfileSchema`: `name` (string 1–100), `avatarUrl` (z.string().url(), optional)
     - _Req: 12.1 | Design §7_
 
@@ -209,7 +209,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Jika exchange gagal → redirect ke `/login?error=auth_failed`
     - _Req: 1.7, 1.8 | Design §5_
 
-  - [~] 4.2 Buat/update `actions/auth.actions.ts` — Auth Server Actions [M]
+  - [x] 4.2 Buat/update `actions/auth.actions.ts` — Auth Server Actions [M]
     - `signInWithEmail(input: unknown)`: validasi email+password dengan Zod schema inline, panggil `supabase.auth.signInWithPassword()`, return `ActionResult<{ redirectTo: string }>`
     - `signInWithGoogle()`: panggil `supabase.auth.signInWithOAuth()` dengan `redirectTo` ke `/auth/callback`, return `ActionResult<{ url: string }>`
     - `signOut()`: panggil `supabase.auth.signOut()`, redirect ke `/login`
@@ -221,7 +221,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 5: Feature Server Actions
 
 - [ ] 5. Implementasi Server Actions per domain
-  - [~] 5.1 Buat/update `actions/finance.actions.ts` [L]
+  - [x] 5.1 Buat/update `actions/finance.actions.ts` [L]
     - `createDuesPeriod(input: unknown)`: requireAuth → requireRole(["admin","bendahara"]) → `createDuesPeriodSchema.safeParse()` → cek duplikasi nama (case-insensitive) → `prisma.duesPeriod.create()` → `revalidatePath("/kas")` + `revalidatePath("/admin/kas")`
     - `archiveDuesPeriod(periodId: string)`: requireAuth → requireRole → `prisma.duesPeriod.update({ isArchived: true })` → revalidatePath
     - `markPaymentPaid(paymentId, opts)`: requireAuth → requireRole → validasi status saat ini bukan "paid" → jika ada `proofImageBuffer`: validasi MIME + size via `uploadPhotoSchema`, upload ke Cloudinary folder `PROOF_FOLDER` → `prisma.duesPayment.update({ status: "paid", paidAt: now(), proofImageUrl, proofImageCloudinaryId })` → revalidatePath
@@ -229,26 +229,26 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Return type eksplisit untuk semua fungsi, tidak ada `any`
     - _Req: 4.1–4.8, 5.1–5.8 | Design §9_
 
-  - [~] 5.2 Buat/update `actions/gallery.actions.ts` [M]
+  - [x] 5.2 Buat/update `actions/gallery.actions.ts` [M]
     - `createGallery(input: unknown)`: requireAuth → requireRole → `createGallerySchema.safeParse()` → `prisma.photoGallery.create()` → revalidatePath
     - `uploadPhoto(galleryId, fileBuffer, mimeType, fileSizeBytes, caption?)`: requireAuth → requireRole → `uploadPhotoSchema.safeParse()` → verifikasi `galleryId` ada di DB → upload ke Cloudinary `GALLERY_FOLDER` → `prisma.photo.create()` → jika DB insert gagal setelah upload: log error, return failure
     - `deletePhoto(photoId: string)`: requireAuth → requireRole → baca `cloudinaryId` dari DB → `deleteFromCloudinary()` → `prisma.photo.delete()`
     - `deleteGallery(galleryId: string)`: requireAuth → requireRole → `prisma.photoGallery.delete()` (Cascade handles photos)
     - _Req: 6.1–6.9 | Design §9_
 
-  - [~] 5.3 Buat/update `actions/announcement.actions.ts` [M]
+  - [x] 5.3 Buat/update `actions/announcement.actions.ts` [M]
     - `createAnnouncement(input)`: requireAuth → requireRole → `createAnnouncementSchema.safeParse()` → `prisma.announcement.create({ status: "draft", authorId: user.id })` — JANGAN baca authorId dari input
     - `publishAnnouncement(announcementId)`: requireAuth → requireRole atau own authorship → `prisma.announcement.update({ status: "published", publishedAt: new Date() })` → revalidatePath kedua routes
     - `updateAnnouncement(input)`: requireAuth → requireRole atau own authorship → `updateAnnouncementSchema.safeParse()` → `prisma.announcement.update()`
     - `deleteAnnouncement(announcementId)`: requireAuth → requireRole atau own authorship → `prisma.announcement.delete()` → revalidatePath
     - _Req: 7.1–7.8 | Design §9_
 
-  - [~] 5.4 Buat/update `actions/schedule.actions.ts` [M]
+  - [x] 5.4 Buat/update `actions/schedule.actions.ts` [M]
     - `upsertScheduleSlot(input)`: requireAuth → requireRole → `upsertScheduleSlotSchema.safeParse()` → `prisma.schedule.upsert({ where: { dayOfWeek_periodOrder: { dayOfWeek, periodOrder } }, ... })` → revalidatePath kedua routes
     - `deleteScheduleSlot(slotId)`: requireAuth → requireRole → `prisma.schedule.delete()` → revalidatePath
     - _Req: 8.1–8.6 | Design §9_
 
-  - [~] 5.5 Buat `actions/attendance.actions.ts` [M]
+  - [x] 5.5 Buat `actions/attendance.actions.ts` [M]
     - `recordAttendance(input)`: requireAuth → `recordAttendanceSchema.safeParse()` → jika user.role === "murid", verifikasi `studentId === user.id` → `prisma.attendance.upsert({ where: { studentId_date: { studentId, date } }, create/update: { status, checkInTime: status === "HADIR" ? new Date() : null } })` → `revalidatePath("/admin/presensi")`
     - `getAttendanceStats(date)`: requireAuth → requireRole(["admin","bendahara"]) → hitung `studentsCount` (count users dengan role="murid"), `presentCount` (count attendances dengan status="HADIR" pada date), `attendanceRate` = (presentCount/studentsCount)*100 dengan 2 desimal → return `ActionResult<AttendanceStats>`
     - _Req: 9.1–9.12 | Design §9_
@@ -258,7 +258,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - `deleteMaterial(materialId)`: requireAuth → requireRole → baca record → jika `cloudinaryId` tidak null: `deleteFromCloudinary()` → `prisma.material.delete()`, jika null: langsung delete DB
     - _Req: 10.1–10.7 | Design §9_
 
-  - [~] 5.7 Buat `actions/forum.actions.ts` [M]
+  - [ ] 5.7 Buat `actions/forum.actions.ts` [M]
     - `createPost(input)`: requireAuth (semua role) → `createPostSchema.safeParse()` → `prisma.forumPost.create({ createdById: user.id })`
     - `createComment(input)`: requireAuth → `createCommentSchema.safeParse()` → verifikasi `postId` ada di DB → `prisma.forumComment.create({ createdById: user.id })`
     - `markCommentAsAnswer(commentId)`: requireAuth → requireRole(["admin","bendahara"]) → baca `postId` dari comment → `prisma.$transaction([updateMany others isAnswer=false, update target isAnswer=true])` — ATOMIC
@@ -266,7 +266,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - `deleteComment(commentId)`: requireAuth → cek own authorship atau requireRole → `prisma.forumComment.delete()`
     - _Req: 11.1–11.9 | Design §9_
 
-  - [~] 5.8 Buat/update `actions/profile.actions.ts` [S]
+  - [x] 5.8 Buat/update `actions/profile.actions.ts` [S]
     - `updateProfile(input, avatarBuffer?, avatarMimeType?)`: requireAuth → `updateProfileSchema.safeParse()` → field `role` di input DIABAIKAN (tidak pernah di-write) → jika `avatarBuffer` ada: upload ke Cloudinary `AVATAR_FOLDER`, gunakan `secure_url` sebagai `avatarUrl` → `prisma.user.update({ where: { id: user.id }, data: { name, avatarUrl } })` → `revalidatePath("/profil")`
     - _Req: 12.1–12.5 | Design §9_
 

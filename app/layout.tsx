@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/shared/Sidebar";
-import { getMockSession } from "@/actions/auth.actions";
+import { getCurrentUser } from "@/lib/actions/guards";
 import { getProfiles } from "@/actions/profile.actions";
 
 const geistSans = Geist({
@@ -25,8 +25,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const currentUser = await getMockSession();
-  const allUsers = await getProfiles();
+  const [currentUser, allUsers] = await Promise.all([
+    getCurrentUser(),
+    getProfiles(),
+  ]);
 
   return (
     <html

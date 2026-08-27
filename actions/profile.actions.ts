@@ -1,58 +1,109 @@
 'use server';
 
-import { getDb, saveDb, Profile } from '@/lib/db';
+/**
+ * actions/profile.actions.ts — Server Actions untuk Profil Pengguna
+ *
+ * Req: 12.1 | Design §7
+ *
+ * NOTE: File ini menggantikan implementasi lama yang menggunakan mock
+ * getDb/saveDb. Semua operasi kini menggunakan Prisma + Supabase Auth.
+ */
+
 import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/actions/guards';
+import { formatError } from '@/lib/utils';
+import type { ActionResult, User } from '@/lib/types';
+import { updateProfileSchema } from '@/lib/validations/profile';
+import { uploadToCloudinary, AVATAR_FOLDER } from '@/lib/cloudinary';
 
-export async function getProfiles() {
-  const db = getDb();
-  return db.profiles;
-}
+// ─── updateProfile ────────────────────────────────────────────────────────────
 
-export async function updateProfile(id: string, data: Partial<Omit<Profile, 'id' | 'role' | 'createdAt'>>) {
-  const db = getDb();
-  const index = db.profiles.findIndex(p => p.id === id);
-  if (index >= 0) {
-    db.profiles[index] = {
-      ...db.profiles[index],
-      ...data,
-      birthDate: data.birthDate ? new Date(data.birthDate).toISOString().split('T')[0] : db.profiles[index].birthDate,
+/**
+ * Updates the authenticated user's profile (name and optional avatar).
+ *
+ * SECURITY: The `role` field is NEVER written, even if present in input.
+ * Avatar is uploaded to Cloudinary when a buffer is provided.
+ *
+ * Requires authentication (any role).
+ */
+export async function updateProfile(
+  input: unknown,
+  avatarBuffer?: Buffer,
+  avatarMimeType?: string
+): Promise<ActionResult<User>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
+
+  const parsed = updateProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? 'Input tidak valid.',
     };
-    saveDb(db);
-    revalidatePath('/profil');
-    revalidatePath('/admin/users');
-    revalidatePath('/');
   }
-  return { success: true };
-}
 
-export async function updateProfileRole(id: string, role: 'admin' | 'treasurer' | 'user') {
-  const db = getDb();
-  const index = db.profiles.findIndex(p => p.id === id);
-  if (index >= 0) {
-    db.profiles[index].role = role;
-    saveDb(db);
-    revalidatePath('/profil');
-    revalidatePath('/admin/users');
+  // Resolve avatarUrl: upload to Cloudinary if buffer provided, else keep existing
+  let avatarUrl: string | undefined = parsed.data.avatarUrl;
+  if (avatarBuffer) {
+    try {
+      const result = await uploadToCloudinary(avatarBuffer, AVATAR_FOLDER);
+      avatarUrl = result.url;
+    } catch (err) {
+      return { success: false, error: formatError(err) };
+    }
   }
-  return { success: true };
+
+  try {
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: parsed.data.name,
+        // avatarUrl is only set when a new value is resolved
+        ...(avatarUrl !== undefined && { avatarUrl }),
+      },
+    });
+
+    revalidatePath('/profil');
+    return { success: true, data: updated };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
 }
 
-export async function deleteProfile(id: string) {
-  const db = getDb();
-  db.profiles = db.profiles.filter(p => p.id !== id);
-  saveDb(db);
-  revalidatePath('/admin/users');
-  return { success: true };
+// ─── getProfile ───────────────────────────────────────────────────────────────
+
+/**
+ * Returns the authenticated user's own profile row from public.users.
+ * Returns null if not found (should not happen in normal flow).
+ *
+ * Requires authentication (any role).
+ */
+export async function getProfile(): Promise<User | null> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return null;
+  const { user } = authResult;
+
+  return prisma.user.findUnique({
+    where: { id: user.id },
+  });
 }
 
-export async function createProfile(data: Omit<Profile, 'createdAt'>) {
-  const db = getDb();
-  const newProfile: Profile = {
-    ...data,
-    createdAt: new Date().toISOString()
-  };
-  db.profiles.push(newProfile);
-  saveDb(db);
-  revalidatePath('/admin/users');
-  return { success: true };
+// ─── getProfiles ──────────────────────────────────────────────────────────────
+
+/**
+ * Returns all user profiles from public.users.
+ * For admin user management only.
+ *
+ * Requires authentication + role: admin.
+ */
+export async function getProfiles(): Promise<User[]> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return [];
+
+  const roleResult = requireRole(authResult.user, ['admin']);
+  if (!roleResult.ok) return [];
+
+  return prisma.user.findMany();
 }

@@ -1,27 +1,29 @@
 'use client';
 
 import React, { useTransition } from 'react';
-import { ForumPost, Profile } from '@/lib/db';
-import { deleteForumPost } from '@/actions/gallery.actions';
-import { Trash, MessageSquare, ThumbsUp, User } from 'lucide-react';
+import type { ForumPost, User } from '@/lib/types';
+import { deletePost } from '@/actions/forum.actions';
+import { Trash, MessageSquare } from 'lucide-react';
 
 interface AdminForumModerationProps {
   posts: ForumPost[];
-  profiles: Profile[];
+  users: User[];
 }
 
-export default function AdminForumModeration({ posts, profiles }: AdminForumModerationProps) {
+export default function AdminForumModeration({ posts, users }: AdminForumModerationProps) {
   const [isPending, startTransition] = useTransition();
 
-  const getAuthorDetails = (userId: string) => {
-    const prof = profiles.find(p => p.id === userId);
-    return prof ? { fullName: prof.fullName, classRole: prof.classRole } : { fullName: 'Siswa RPL 1', classRole: 'Anggota' };
+  const getAuthorDetails = (createdById: string) => {
+    const user = users.find(u => u.id === createdById);
+    return user
+      ? { name: user.name, role: user.role }
+      : { name: 'Siswa RPL 1', role: 'Anggota' };
   };
 
   const handleDelete = (id: string) => {
     if (confirm('Hapus thread diskusi ini beserta seluruh komentarnya secara permanen?')) {
       startTransition(async () => {
-        await deleteForumPost(id);
+        await deletePost(id);
       });
     }
   };
@@ -38,17 +40,14 @@ export default function AdminForumModeration({ posts, profiles }: AdminForumMode
           posts.map((post) => {
             const author = getAuthorDetails(post.createdById);
             return (
-              <div 
-                key={post.id} 
+              <div
+                key={post.id}
                 className="flex items-start justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30 text-xs"
               >
                 <div className="space-y-1.5 max-w-[80%]">
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                      {post.subjectName || 'Umum'}
-                    </span>
                     <span className="text-[10px] text-slate-400">
-                      Oleh: {author.fullName} ({author.classRole})
+                      Oleh: {author.name} ({author.role})
                     </span>
                   </div>
                   <h4 className="font-bold text-slate-900 dark:text-white text-sm">{post.title}</h4>
@@ -56,11 +55,6 @@ export default function AdminForumModeration({ posts, profiles }: AdminForumMode
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="flex items-center gap-1 text-[10px] text-slate-450">
-                    <ThumbsUp className="h-3.5 w-3.5" />
-                    {post.upvotes}
-                  </span>
-                  
                   <button
                     onClick={() => handleDelete(post.id)}
                     disabled={isPending}

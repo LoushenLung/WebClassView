@@ -1,11 +1,12 @@
 import React from 'react';
-import { getForumPosts } from '@/actions/gallery.actions';
+import { getForumPosts } from '@/actions/forum.actions';
 import { getProfiles } from '@/actions/profile.actions';
 import AdminForumModeration from './_components/AdminForumModeration';
 
 export default async function AdminForumPage() {
-  const posts = await getForumPosts();
-  const profiles = await getProfiles();
+  const result = await getForumPosts();
+  const posts = result.success ? result.data : [];
+  const users = await getProfiles();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -15,7 +16,7 @@ export default async function AdminForumPage() {
       </div>
 
       <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
-        <AdminForumModeration posts={posts} profiles={profiles} />
+        <AdminForumModeration posts={posts} users={users} />
       </div>
     </div>
   );

@@ -1,113 +1,264 @@
 'use server';
 
-import { getDb, saveDb, FinanceTransaction, CashPayment } from '@/lib/db';
+/**
+ * actions/finance.actions.ts — Kas Kelas (Dues) Server Actions
+ *
+ * Exports:
+ *  - createDuesPeriod    Req: 4.1–4.5, 4.8
+ *  - archiveDuesPeriod   Req: 4.4
+ *  - markPaymentPaid     Req: 5.1–5.4
+ *  - getDuesSummary      Req: 5.7, 5.8
+ *
+ * Pattern: requireAuth → requireRole → safeParse → DB op → revalidatePath → ActionResult
+ */
+
 import { revalidatePath } from 'next/cache';
-import { getMockSession } from './auth.actions';
+import type { DuesPeriod, DuesPayment } from '@/lib/types';
 
-export async function getFinanceSummary() {
-  const db = getDb();
-  const txs = db.transactions;
-  const payments = db.payments;
+import { prisma } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/actions/guards';
+import { formatError } from '@/lib/utils';
+import { uploadToCloudinary, PROOF_FOLDER } from '@/lib/cloudinary';
+import {
+  createDuesPeriodSchema,
+  proofImageMetaSchema,
+} from '@/lib/validations/kas';
+import type { ActionResult, DuesSummaryRow } from '@/lib/types';
 
-  // Let's calculate total weekly dues collected
-  const totalDues = payments
-    .filter(p => p.status === 'PAID')
-    .length * 10000; // Let's assume weekly due is Rp 10.000 per week
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-  const totalOtherIncome = txs
-    .filter(t => t.type === 'IN')
-    .reduce((sum, t) => sum + t.amount, 0);
+const ALLOWED_ROLES = ['admin', 'bendahara'] as const;
 
-  const totalIncome = totalDues + totalOtherIncome;
-
-  const totalExpense = txs
-    .filter(t => t.type === 'OUT')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const currentBalance = totalIncome - totalExpense;
-
-  return {
-    totalIncome,
-    totalExpense,
-    currentBalance,
-    totalDues,
-    totalOtherIncome
-  };
-}
-
-export async function getTransactions() {
-  const db = getDb();
-  // Sort descending by date
-  return [...db.transactions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export async function getPayments() {
-  const db = getDb();
-  return db.payments;
-}
-
-export async function createTransaction(data: {
-  type: 'IN' | 'OUT';
-  amount: number;
-  category: string;
-  description: string;
-  receiptUrl?: string;
-}) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newTx: FinanceTransaction = {
-    id: 'tx-' + Math.random().toString(36).substr(2, 9),
-    ...data,
-    createdById: session.id,
-    createdAt: new Date().toISOString()
-  };
-  db.transactions.push(newTx);
-  saveDb(db);
+/** Revalidate all kas-related paths after any mutation. */
+function revalidateKas(): void {
   revalidatePath('/kas');
   revalidatePath('/admin/kas');
-  return { success: true };
 }
 
-export async function deleteTransaction(id: string) {
-  const db = getDb();
-  db.transactions = db.transactions.filter(t => t.id !== id);
-  saveDb(db);
-  revalidatePath('/kas');
-  revalidatePath('/admin/kas');
-  return { success: true };
-}
+// ── createDuesPeriod ─────────────────────────────────────────────────────────
 
-export async function updatePaymentStatus(
-  userId: string,
-  periodWeek: number,
-  periodYear: number,
-  status: 'PAID' | 'UNPAID' | 'PENDING'
-) {
-  const session = await getMockSession();
-  const db = getDb();
-  const index = db.payments.findIndex(
-    p => p.userId === userId && p.periodWeek === periodWeek && p.periodYear === periodYear
-  );
+/**
+ * Creates a new DuesPeriod.
+ * Guards: requireAuth → requireRole(admin|bendahara)
+ * Validation: createDuesPeriodSchema + case-insensitive duplicate name check
+ */
+export async function createDuesPeriod(
+  input: unknown,
+): Promise<ActionResult<DuesPeriod>> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
 
-  if (index >= 0) {
-    db.payments[index].status = status;
-    db.payments[index].verifiedById = status === 'PAID' ? session.id : undefined;
-    db.payments[index].updatedAt = new Date().toISOString();
-  } else {
-    const newPayment: CashPayment = {
-      id: 'pay-' + Math.random().toString(36).substr(2, 9),
-      userId,
-      periodWeek,
-      periodYear,
-      status,
-      verifiedById: status === 'PAID' ? session.id : undefined,
-      updatedAt: new Date().toISOString()
-    };
-    db.payments.push(newPayment);
+  // 2. Role guard
+  const roleResult = requireRole(user, [...ALLOWED_ROLES]);
+  if (!roleResult.ok) return roleResult.result;
+
+  // 3. Zod validation
+  const parsed = createDuesPeriodSchema.safeParse(input);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? 'Input tidak valid.';
+    return { success: false, error: firstError };
   }
 
-  saveDb(db);
-  revalidatePath('/kas');
-  revalidatePath('/admin/kas');
-  return { success: true };
+  const { name, amount, startDate, endDate } = parsed.data;
+
+  try {
+    // 4. Case-insensitive duplicate name check (Req 4.5)
+    const existing = await prisma.duesPeriod.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } },
+    });
+    if (existing) {
+      return {
+        success: false,
+        error: 'Periode iuran dengan nama tersebut sudah ada.',
+      };
+    }
+
+    // 5. Create
+    const period = await prisma.duesPeriod.create({
+      data: {
+        name,
+        amount,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      },
+    });
+
+    // 6. Revalidate
+    revalidateKas();
+
+    return { success: true, data: period };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ── archiveDuesPeriod ────────────────────────────────────────────────────────
+
+/**
+ * Soft-deletes a DuesPeriod by setting isArchived = true.
+ * Guards: requireAuth → requireRole(admin|bendahara)
+ */
+export async function archiveDuesPeriod(
+  periodId: string,
+): Promise<ActionResult<DuesPeriod>> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
+
+  // 2. Role guard
+  const roleResult = requireRole(user, [...ALLOWED_ROLES]);
+  if (!roleResult.ok) return roleResult.result;
+
+  try {
+    const period = await prisma.duesPeriod.update({
+      where: { id: periodId },
+      data: { isArchived: true },
+    });
+
+    revalidateKas();
+
+    return { success: true, data: period };
+  } catch (err) {
+    return {
+      success: false,
+      error: formatError(err) || 'Gagal mengarsipkan periode iuran. Coba lagi.',
+    };
+  }
+}
+
+// ── markPaymentPaid ──────────────────────────────────────────────────────────
+
+/** Options for markPaymentPaid — proof image fields are optional. */
+export interface MarkPaymentPaidOpts {
+  proofImageBuffer?: Buffer;
+  proofImageMimeType?: string;
+  proofImageSizeBytes?: number;
+  notes?: string;
+}
+
+/**
+ * Marks a DuesPayment as paid.
+ * Guards: requireAuth → requireRole(admin|bendahara)
+ * Logic:
+ *   - Rejects if current status is already "paid"
+ *   - If proof image provided: validates MIME + size, uploads to Cloudinary
+ *   - Updates payment record atomically
+ */
+export async function markPaymentPaid(
+  paymentId: string,
+  opts?: MarkPaymentPaidOpts,
+): Promise<ActionResult<DuesPayment>> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
+
+  // 2. Role guard
+  const roleResult = requireRole(user, [...ALLOWED_ROLES]);
+  if (!roleResult.ok) return roleResult.result;
+
+  try {
+    // 3. Load current payment to check status (Req 5.1)
+    const current = await prisma.duesPayment.findUnique({
+      where: { id: paymentId },
+    });
+
+    if (!current) {
+      return { success: false, error: 'Data pembayaran tidak ditemukan.' };
+    }
+
+    if (current.status === 'paid') {
+      return {
+        success: false,
+        error: 'Pembayaran ini sudah tercatat sebagai lunas.',
+      };
+    }
+
+    // 4. Handle optional proof image
+    let proofImageUrl: string | undefined;
+    let proofImageCloudinaryId: string | undefined;
+
+    if (opts?.proofImageBuffer) {
+      // Validate MIME type and file size (Req 5.2)
+      const metaValidation = proofImageMetaSchema.safeParse({
+        mimeType: opts.proofImageMimeType,
+        fileSizeBytes: opts.proofImageSizeBytes,
+      });
+
+      if (!metaValidation.success) {
+        const firstError =
+          metaValidation.error.issues[0]?.message ?? 'File tidak valid.';
+        return { success: false, error: firstError };
+      }
+
+      // Upload to Cloudinary before updating DB (Req 5.3)
+      // If upload fails, we must NOT update the DB (Req 5.4)
+      let uploadResult: { url: string; publicId: string };
+      try {
+        uploadResult = await uploadToCloudinary(
+          opts.proofImageBuffer,
+          PROOF_FOLDER,
+        );
+      } catch {
+        return {
+          success: false,
+          error: 'Gagal mengupload bukti pembayaran. Coba lagi.',
+        };
+      }
+
+      proofImageUrl = uploadResult.url;
+      proofImageCloudinaryId = uploadResult.publicId;
+    }
+
+    // 5. Update payment record
+    const updated = await prisma.duesPayment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'paid',
+        paidAt: new Date(),
+        ...(proofImageUrl !== undefined && { proofImageUrl }),
+        ...(proofImageCloudinaryId !== undefined && { proofImageCloudinaryId }),
+        ...(opts?.notes !== undefined && { notes: opts.notes }),
+      },
+    });
+
+    revalidateKas();
+
+    return { success: true, data: updated };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ── getDuesSummary ────────────────────────────────────────────────────────────
+
+/**
+ * Returns aggregated dues summary from the `dues_summary` SQL view.
+ * Guards: requireAuth → requireRole(admin|bendahara)
+ */
+export async function getDuesSummary(): Promise<
+  ActionResult<DuesSummaryRow[]>
+> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
+
+  // 2. Role guard
+  const roleResult = requireRole(user, [...ALLOWED_ROLES]);
+  if (!roleResult.ok) return roleResult.result;
+
+  try {
+    // 3. Query the dues_summary view via $queryRaw (Req 5.7)
+    const rows = await prisma.$queryRawUnsafe<DuesSummaryRow[]>(
+      'SELECT * FROM public.dues_summary',
+    );
+
+    return { success: true, data: rows };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
 }

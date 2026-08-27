@@ -1,10 +1,10 @@
 import React from 'react';
 import { getProfiles } from '@/actions/profile.actions';
-import { getAttendances } from '@/actions/announcement.actions';
+import { getAttendances } from '@/actions/attendance.actions';
 import AdminAttendanceCRUD from './_components/AdminAttendanceCRUD';
 
 export default async function AdminAttendancePage() {
-  const profiles = await getProfiles();
+  const users = await getProfiles();
   const todayStr = new Date().toISOString().split('T')[0];
   const attendances = await getAttendances(todayStr);
 
@@ -15,9 +15,9 @@ export default async function AdminAttendancePage() {
         <p className="text-xs text-slate-400">Pilih tanggal, pantau absensi kelas, dan rekap manual kehadiran siswa (Hadir, Izin, Sakit, Alfa).</p>
       </div>
 
-      <AdminAttendanceCRUD 
-        initialAttendances={attendances} 
-        profiles={profiles} 
+      <AdminAttendanceCRUD
+        initialAttendances={attendances}
+        users={users}
       />
     </div>
   );

@@ -24,7 +24,7 @@ import type { ActionResult, CurrentUser, UserRole } from "@/lib/types";
  */
 export const getCurrentUser = cache(
   async (): Promise<CurrentUser | null> => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

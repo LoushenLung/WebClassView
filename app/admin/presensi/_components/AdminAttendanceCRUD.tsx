@@ -1,64 +1,76 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Attendance, Profile } from '@/lib/db';
-import { submitAttendance } from '@/actions/announcement.actions';
-import { Calendar, CheckCircle2, User, RefreshCw } from 'lucide-react';
+import type { Attendance, User } from '@/lib/types';
+import { recordAttendance } from '@/actions/attendance.actions';
+import { Calendar } from 'lucide-react';
 
 interface AdminAttendanceCRUDProps {
   initialAttendances: Attendance[];
-  profiles: Profile[];
+  users: User[];
 }
 
-export default function AdminAttendanceCRUD({ 
-  initialAttendances, 
-  profiles 
+export default function AdminAttendanceCRUD({
+  initialAttendances,
+  users,
 }: AdminAttendanceCRUDProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendances, setAttendances] = useState<Attendance[]>(initialAttendances);
 
-  const getStudentStatus = (userId: string) => {
-    const att = attendances.find(a => a.userId === userId && a.date === selectedDate);
-    return att ? att.status : 'ALFA'; // default to ALFA if not set
+  const getStudentStatus = (userId: string): 'HADIR' | 'IZIN' | 'SAKIT' | 'ALFA' => {
+    const att = attendances.find(
+      (a) => a.studentId === userId && new Date(a.date).toISOString().split('T')[0] === selectedDate
+    );
+    return (att?.status as 'HADIR' | 'IZIN' | 'SAKIT' | 'ALFA') ?? 'ALFA';
   };
 
-  const handleStatusChange = (userId: string, newStatus: 'HADIR' | 'IZIN' | 'SAKIT' | 'ALFA') => {
+  const handleStatusChange = (
+    userId: string,
+    newStatus: 'HADIR' | 'IZIN' | 'SAKIT' | 'ALFA'
+  ) => {
     startTransition(async () => {
-      await submitAttendance(userId, newStatus, selectedDate);
-      
-      // Update local state instantly
-      setAttendances(prev => {
-        const existingIdx = prev.findIndex(a => a.userId === userId && a.date === selectedDate);
+      await recordAttendance({ studentId: userId, date: selectedDate, status: newStatus });
+
+      // Optimistic local update
+      setAttendances((prev) => {
+        const existingIdx = prev.findIndex(
+          (a) => a.studentId === userId && new Date(a.date).toISOString().split('T')[0] === selectedDate
+        );
         if (existingIdx >= 0) {
           const updated = [...prev];
           updated[existingIdx] = {
             ...updated[existingIdx],
             status: newStatus,
-            checkInTime: newStatus === 'HADIR' ? new Date().toISOString() : undefined
+            checkInTime: newStatus === 'HADIR' ? new Date() : null,
           };
           return updated;
-        } else {
-          return [
-            ...prev,
-            {
-              id: 'att-local-' + Math.random(),
-              userId,
-              date: selectedDate,
-              status: newStatus,
-              checkInTime: newStatus === 'HADIR' ? new Date().toISOString() : undefined,
-              createdAt: new Date().toISOString()
-            }
-          ];
         }
+        return [
+          ...prev,
+          {
+            id: 'att-local-' + Math.random(),
+            studentId: userId,
+            date: new Date(selectedDate),
+            status: newStatus,
+            checkInTime: newStatus === 'HADIR' ? new Date() : null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ];
       });
     });
   };
 
-  // Quick Stats
-  const presentCount = attendances.filter(a => a.date === selectedDate && a.status === 'HADIR').length;
-  const permissionCount = attendances.filter(a => a.date === selectedDate && (a.status === 'IZIN' || a.status === 'SAKIT')).length;
-  const absentCount = profiles.length - presentCount - permissionCount;
+  const presentCount = attendances.filter(
+    (a) => new Date(a.date).toISOString().split('T')[0] === selectedDate && a.status === 'HADIR'
+  ).length;
+  const permissionCount = attendances.filter(
+    (a) =>
+      new Date(a.date).toISOString().split('T')[0] === selectedDate &&
+      (a.status === 'IZIN' || a.status === 'SAKIT')
+  ).length;
+  const absentCount = users.length - presentCount - permissionCount;
 
   return (
     <div className="space-y-6">
@@ -74,7 +86,6 @@ export default function AdminAttendanceCRUD({
           />
         </div>
 
-        {/* Stats */}
         <div className="flex flex-wrap gap-4 text-xs font-bold">
           <div className="rounded-xl bg-emerald-500/10 text-emerald-500 px-3 py-2 border border-emerald-500/20">
             Hadir: {presentCount}
@@ -91,33 +102,44 @@ export default function AdminAttendanceCRUD({
       {/* Recap Table */}
       <div className="overflow-x-auto rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
         <h3 className="text-sm font-bold text-slate-950 dark:text-white mb-4">
-          Status Presensi Kelas ({new Date(selectedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })})
+          Status Presensi Kelas (
+          {new Date(selectedDate).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}
+          )
         </h3>
-        
+
         <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-850">
-                <th className="p-3 font-bold text-slate-400">Nama Siswa</th>
-                <th className="p-3 font-bold text-slate-400">NISN / NIM</th>
-                <th className="p-3 font-bold text-slate-400">Jabatan</th>
+                <th className="p-3 font-bold text-slate-400">Nama</th>
+                <th className="p-3 font-bold text-slate-400">Email</th>
+                <th className="p-3 font-bold text-slate-400">Role</th>
                 <th className="p-3 font-bold text-slate-400 text-center">Status Kehadiran</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {profiles.map((student) => {
-                const status = getStudentStatus(student.id);
-
+              {users.map((user) => {
+                const status = getStudentStatus(user.id);
                 return (
-                  <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                    <td className="p-3 font-bold">{student.fullName}</td>
-                    <td className="p-3 font-mono text-slate-500">{student.studentId || '-'}</td>
-                    <td className="p-3 text-slate-500">{student.classRole}</td>
+                  <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                    <td className="p-3 font-bold">{user.name}</td>
+                    <td className="p-3 text-slate-500">{user.email}</td>
+                    <td className="p-3 text-slate-500 capitalize">{user.role}</td>
                     <td className="p-3 text-center">
                       <select
                         value={status}
-                        onChange={(e) => handleStatusChange(student.id, e.target.value as any)}
-                        className={`rounded-lg border px-2 py-1.5 text-[10px] font-bold focus:outline-none cursor-pointer ${
+                        onChange={(e) =>
+                          handleStatusChange(
+                            user.id,
+                            e.target.value as 'HADIR' | 'IZIN' | 'SAKIT' | 'ALFA'
+                          )
+                        }
+                        disabled={isPending}
+                        className={`rounded-lg border px-2 py-1.5 text-[10px] font-bold focus:outline-none cursor-pointer disabled:opacity-50 ${
                           status === 'HADIR'
                             ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/25'
                             : status === 'IZIN'

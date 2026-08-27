@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Announcement } from '@/lib/db';
-import { createAnnouncement, togglePinAnnouncement, deleteAnnouncement } from '@/actions/announcement.actions';
-import { Plus, Trash, Pin, Calendar } from 'lucide-react';
+import { Announcement } from '@/lib/types';
+import { createAnnouncement, publishAnnouncement, deleteAnnouncement } from '@/actions/announcement.actions';
+import { Plus, Trash, Send, Calendar } from 'lucide-react';
 
 interface AdminAnnouncementCRUDProps {
   announcements: Announcement[];
@@ -14,31 +14,21 @@ export default function AdminAnnouncementCRUD({ announcements }: AdminAnnounceme
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [priorityLevel, setPriorityLevel] = useState<'BIASA' | 'PENTING' | 'URGENT'>('BIASA');
-  const [pinned, setPinned] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) return;
 
     startTransition(async () => {
-      await createAnnouncement({
-        title,
-        content,
-        priorityLevel,
-        pinned
-      });
-      // reset
+      await createAnnouncement({ title, content });
       setTitle('');
       setContent('');
-      setPriorityLevel('BIASA');
-      setPinned(false);
     });
   };
 
-  const handleTogglePin = (id: string) => {
+  const handlePublish = (id: string) => {
     startTransition(async () => {
-      await togglePinAnnouncement(id);
+      await publishAnnouncement(id);
     });
   };
 
@@ -84,36 +74,12 @@ export default function AdminAnnouncementCRUD({ announcements }: AdminAnnounceme
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-bold text-slate-400">Tingkat Prioritas</label>
-            <select
-              value={priorityLevel}
-              onChange={(e) => setPriorityLevel(e.target.value as any)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
-            >
-              <option value="BIASA">Biasa</option>
-              <option value="PENTING">Penting</option>
-              <option value="URGENT">Urgent / Darurat</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="pinned"
-              checked={pinned}
-              onChange={(e) => setPinned(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500"
-            />
-            <label htmlFor="pinned" className="font-bold text-slate-400 cursor-pointer">Sematkan di halaman depan (Pin)</label>
-          </div>
-
           <button
             type="submit"
             disabled={isPending}
             className="w-full inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
           >
-            Terbitkan Pengumuman
+            Simpan sebagai Draft
           </button>
         </form>
       </div>
@@ -121,46 +87,57 @@ export default function AdminAnnouncementCRUD({ announcements }: AdminAnnounceme
       {/* List */}
       <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md lg:col-span-2 space-y-4">
         <h3 className="text-sm font-bold text-slate-950 dark:text-white">Daftar Papan Pengumuman</h3>
-        
+
         <div className="space-y-4">
           {announcements.length > 0 ? (
             announcements.map((ann) => (
-              <div 
-                key={ann.id} 
+              <div
+                key={ann.id}
                 className="flex items-start justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30 text-xs"
               >
                 <div className="space-y-1.5 max-w-[80%]">
                   <div className="flex items-center gap-2">
+                    {/* Status badge */}
                     <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                      ann.priorityLevel === 'URGENT' 
-                        ? 'bg-rose-500/10 text-rose-500' 
-                        : ann.priorityLevel === 'PENTING' 
-                        ? 'bg-amber-500/10 text-amber-500' 
-                        : 'bg-slate-200 text-slate-600'
+                      ann.status === 'published'
+                        ? 'bg-emerald-500/10 text-emerald-600'
+                        : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
                     }`}>
-                      {ann.priorityLevel}
+                      {ann.status === 'published' ? 'Diterbitkan' : 'Draft'}
                     </span>
-                    <span className="text-[10px] text-slate-400">
-                      {new Date(ann.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+
+                    {/* Date */}
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(
+                        ann.status === 'published' && ann.publishedAt
+                          ? ann.publishedAt
+                          : ann.createdAt
+                      ).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
+
                   <h4 className="font-bold text-slate-900 dark:text-white text-sm">{ann.title}</h4>
                   <p className="text-slate-500 line-clamp-2">{ann.content}</p>
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => handleTogglePin(ann.id)}
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                      ann.pinned ? 'text-indigo-500 bg-indigo-500/10' : 'text-slate-400 hover:bg-slate-100'
-                    }`}
-                    title={ann.pinned ? 'Lepas Pin' : 'Pin Pengumuman'}
-                  >
-                    <Pin className="h-3.5 w-3.5" />
-                  </button>
+                  {/* Publish button — only shown for drafts */}
+                  {ann.status === 'draft' && (
+                    <button
+                      onClick={() => handlePublish(ann.id)}
+                      disabled={isPending}
+                      className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-500/10 cursor-pointer disabled:opacity-50 transition-colors"
+                      title="Terbitkan"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+
                   <button
                     onClick={() => handleDelete(ann.id)}
-                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                    disabled={isPending}
+                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer disabled:opacity-50 transition-colors"
                     title="Hapus"
                   >
                     <Trash className="h-3.5 w-3.5" />

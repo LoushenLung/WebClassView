@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Material } from '@/lib/db';
-import { createMaterial, deleteMaterial } from '@/actions/schedule.actions';
-import { Plus, Trash, FileText, Download } from 'lucide-react';
+import type { Material } from '@/lib/types';
+import { createMaterial, deleteMaterial } from '@/actions/material.actions';
+import { Plus, Trash, FileText, ExternalLink } from 'lucide-react';
 
 interface AdminMaterialCRUDProps {
   materials: Material[];
@@ -15,35 +15,23 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
   const [subjectName, setSubjectName] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [fileUrl, setFileUrl] = useState('');
-  const [fileType, setFileType] = useState('PDF');
-  const [semester, setSemester] = useState(1);
+  const [externalLink, setExternalLink] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subjectName || !title || !fileUrl) return;
+    if (!subjectName || !title || !externalLink) return;
 
     startTransition(async () => {
-      await createMaterial({
-        subjectName,
-        title,
-        description: description || undefined,
-        fileUrl,
-        fileType,
-        semester
-      });
-      // reset
+      await createMaterial({ subjectName, title, description: description || undefined, externalLink });
       setSubjectName('');
       setTitle('');
       setDescription('');
-      setFileUrl('');
-      setFileType('PDF');
-      setSemester(1);
+      setExternalLink('');
     });
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus materi pelajaran ini?')) {
+    if (confirm('Hapus materi pelajaran ini?')) {
       startTransition(async () => {
         await deleteMaterial(id);
       });
@@ -56,7 +44,7 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
       <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md h-fit space-y-4">
         <h3 className="text-sm font-bold text-slate-950 dark:text-white flex items-center gap-1.5">
           <Plus className="h-4 w-4 text-indigo-500" />
-          Tambah Modul / Materi Baru
+          Tambah Materi / Tautan
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
@@ -73,7 +61,7 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-400">Judul Modul</label>
+            <label className="font-bold text-slate-400">Judul Materi</label>
             <input
               type="text"
               value={title}
@@ -85,53 +73,26 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-400">Deskripsi Singkat</label>
+            <label className="font-bold text-slate-400">Deskripsi (Opsional)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
-              placeholder="Tulis ringkasan singkat isi modul..."
+              placeholder="Ringkasan singkat isi materi..."
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-400">URL File Dokumen (Cloudinary/PDF Link)</label>
+            <label className="font-bold text-slate-400">Tautan Eksternal</label>
             <input
-              type="text"
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
+              type="url"
+              value={externalLink}
+              onChange={(e) => setExternalLink(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
-              placeholder="https://..."
+              placeholder="https://drive.google.com/..."
               required
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="font-bold text-slate-400">Tipe Dokumen</label>
-              <select
-                value={fileType}
-                onChange={(e) => setFileType(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
-              >
-                <option value="PDF">PDF File</option>
-                <option value="PPT">PPT Presentation</option>
-                <option value="DOCX">Word Document</option>
-                <option value="Video">Video Tutorial</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="font-bold text-slate-400">Semester</label>
-              <select
-                value={semester}
-                onChange={(e) => setSemester(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
-              >
-                <option value={1}>Semester 1</option>
-                <option value={2}>Semester 2</option>
-              </select>
-            </div>
           </div>
 
           <button
@@ -139,22 +100,21 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
             disabled={isPending}
             className="w-full inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 cursor-pointer disabled:opacity-50"
           >
-            Unggah Materi
+            Tambah Materi
           </button>
         </form>
       </div>
 
       {/* List */}
       <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md lg:col-span-2 space-y-4">
-        <h3 className="text-sm font-bold text-slate-950 dark:text-white">Daftar Modul Terupload</h3>
+        <h3 className="text-sm font-bold text-slate-950 dark:text-white">Daftar Materi</h3>
         <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-850">
                 <th className="p-3 font-bold text-slate-400">Mapel</th>
-                <th className="p-3 font-bold text-slate-400">Judul Modul</th>
-                <th className="p-3 font-bold text-slate-400">Uploader</th>
-                <th className="p-3 font-bold text-slate-400">Format</th>
+                <th className="p-3 font-bold text-slate-400">Judul</th>
+                <th className="p-3 font-bold text-slate-400">Tautan</th>
                 <th className="p-3 font-bold text-slate-400 text-center">Aksi</th>
               </tr>
             </thead>
@@ -163,20 +123,42 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
                 materials.map((mat) => (
                   <tr key={mat.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="p-3 font-bold">{mat.subjectName}</td>
-                    <td className="p-3 font-semibold flex items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 text-indigo-500" />
-                      {mat.title}
-                    </td>
-                    <td className="p-3 text-slate-500">{mat.uploaderName}</td>
-                    <td className="p-3">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold dark:bg-slate-800 text-slate-600 dark:text-slate-350">
-                        {mat.fileType}
+                    <td className="p-3 font-semibold">
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                        {mat.title}
                       </span>
+                    </td>
+                    <td className="p-3">
+                      {mat.externalLink ? (
+                        <a
+                          href={mat.externalLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-indigo-500 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Buka
+                        </a>
+                      ) : mat.fileUrl ? (
+                        <a
+                          href={mat.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-indigo-500 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Unduh
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
                     </td>
                     <td className="p-3 text-center">
                       <button
                         onClick={() => handleDelete(mat.id)}
-                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                        disabled={isPending}
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer disabled:opacity-50"
                       >
                         <Trash className="h-3.5 w-3.5" />
                       </button>
@@ -185,8 +167,8 @@ export default function AdminMaterialCRUD({ materials }: AdminMaterialCRUDProps)
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-slate-400">
-                    Belum ada materi terupload
+                  <td colSpan={4} className="p-6 text-center text-slate-400">
+                    Belum ada materi ditambahkan
                   </td>
                 </tr>
               )}

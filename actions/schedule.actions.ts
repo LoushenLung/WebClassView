@@ -1,125 +1,129 @@
 'use server';
 
-import { getDb, saveDb, Schedule, Task, Material, TaskProgress } from '@/lib/db';
+/**
+ * actions/schedule.actions.ts — Server Actions for Jadwal Kelas domain
+ *
+ * Replaces the old mock-based implementation with Prisma + auth guards.
+ * Tasks and Materials are handled in their own separate action files.
+ *
+ * Req: 8.1, 8.2 | Design §7
+ */
+
 import { revalidatePath } from 'next/cache';
-import { getMockSession } from './auth.actions';
 
-// --- Schedules ---
-export async function getSchedules() {
-  const db = getDb();
-  return db.schedules;
+import { prisma } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/actions/guards';
+import { formatError } from '@/lib/utils';
+import type { ActionResult, Schedule } from '@/lib/types';
+import { upsertScheduleSlotSchema } from '@/lib/validations/schedule';
+
+// ---------------------------------------------------------------------------
+// Read
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns all schedule slots ordered by day then period.
+ * Requires an authenticated session (any role).
+ */
+export async function getScheduleSlots(): Promise<Schedule[]> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return [];
+
+  return prisma.schedule.findMany({
+    orderBy: [{ dayOfWeek: 'asc' }, { periodOrder: 'asc' }],
+  });
 }
 
-export async function createSchedule(data: Omit<Schedule, 'id'>) {
-  const db = getDb();
-  const newSchedule: Schedule = {
-    id: 'sched-' + Math.random().toString(36).substr(2, 9),
-    ...data
-  };
-  db.schedules.push(newSchedule);
-  saveDb(db);
-  revalidatePath('/jadwal');
-  revalidatePath('/admin/jadwal');
-  return { success: true };
-}
+// ---------------------------------------------------------------------------
+// Write — admin / bendahara only
+// ---------------------------------------------------------------------------
 
-export async function deleteSchedule(id: string) {
-  const db = getDb();
-  db.schedules = db.schedules.filter(s => s.id !== id);
-  saveDb(db);
-  revalidatePath('/jadwal');
-  revalidatePath('/admin/jadwal');
-  return { success: true };
-}
+/**
+ * Creates or updates a schedule slot identified by (dayOfWeek, periodOrder).
+ *
+ * @param input - Raw (unvalidated) data from the form.
+ */
+export async function upsertScheduleSlot(
+  input: unknown
+): Promise<ActionResult<Schedule>> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
 
-// --- Tasks ---
-export async function getTasks() {
-  const db = getDb();
-  return db.tasks;
-}
+  // 2. Role guard
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
 
-export async function getTaskProgresses(userId: string) {
-  const db = getDb();
-  return db.taskProgresses.filter(p => p.userId === userId);
-}
-
-export async function createTask(data: Omit<Task, 'id' | 'createdAt' | 'createdById'>) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newTask: Task = {
-    id: 'task-' + Math.random().toString(36).substr(2, 9),
-    ...data,
-    createdById: session.id,
-    createdAt: new Date().toISOString()
-  };
-  db.tasks.push(newTask);
-  saveDb(db);
-  revalidatePath('/jadwal');
-  revalidatePath('/admin/jadwal');
-  return { success: true };
-}
-
-export async function deleteTask(id: string) {
-  const db = getDb();
-  db.tasks = db.tasks.filter(t => t.id !== id);
-  db.taskProgresses = db.taskProgresses.filter(p => p.taskId !== id);
-  saveDb(db);
-  revalidatePath('/jadwal');
-  revalidatePath('/admin/jadwal');
-  return { success: true };
-}
-
-export async function updateTaskProgress(taskId: string, status: 'TODO' | 'IN_PROGRESS' | 'DONE') {
-  const session = await getMockSession();
-  const db = getDb();
-  const existing = db.taskProgresses.find(p => p.taskId === taskId && p.userId === session.id);
-  
-  if (existing) {
-    existing.status = status;
-    existing.updatedAt = new Date().toISOString();
-  } else {
-    const newProgress: TaskProgress = {
-      id: 'prog-' + Math.random().toString(36).substr(2, 9),
-      taskId,
-      userId: session.id,
-      status,
-      updatedAt: new Date().toISOString()
+  // 3. Validation
+  const parsed = upsertScheduleSlotSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues.map((e: { message: string }) => e.message).join(' '),
     };
-    db.taskProgresses.push(newProgress);
   }
-  
-  saveDb(db);
-  revalidatePath('/jadwal');
-  return { success: true };
+
+  const { dayOfWeek, periodOrder, periodLabel, subject, teacher, room, isBreak } =
+    parsed.data;
+
+  try {
+    const slot = await prisma.schedule.upsert({
+      where: {
+        dayOfWeek_periodOrder: { dayOfWeek, periodOrder },
+      },
+      create: {
+        dayOfWeek,
+        periodOrder,
+        periodLabel,
+        subject: subject ?? null,
+        teacher: teacher ?? null,
+        room: room ?? null,
+        isBreak,
+      },
+      update: {
+        periodLabel,
+        subject: subject ?? null,
+        teacher: teacher ?? null,
+        room: room ?? null,
+        isBreak,
+      },
+    });
+
+    revalidatePath('/jadwal');
+    revalidatePath('/admin/jadwal');
+
+    return { success: true, data: slot };
+  } catch (error) {
+    return { success: false, error: formatError(error) };
+  }
 }
 
-// --- Materials ---
-export async function getMaterials() {
-  const db = getDb();
-  return db.materials;
-}
+/**
+ * Deletes a schedule slot by its primary key ID.
+ *
+ * @param slotId - The CUID of the schedule row to delete.
+ */
+export async function deleteScheduleSlot(
+  slotId: string
+): Promise<ActionResult<Schedule>> {
+  // 1. Auth guard
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
 
-export async function createMaterial(data: Omit<Material, 'id' | 'createdAt' | 'uploaderName'>) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newMaterial: Material = {
-    id: 'mat-' + Math.random().toString(36).substr(2, 9),
-    ...data,
-    uploaderName: session.fullName,
-    createdAt: new Date().toISOString()
-  };
-  db.materials.push(newMaterial);
-  saveDb(db);
-  revalidatePath('/materi');
-  revalidatePath('/admin/materi');
-  return { success: true };
-}
+  // 2. Role guard
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
 
-export async function deleteMaterial(id: string) {
-  const db = getDb();
-  db.materials = db.materials.filter(m => m.id !== id);
-  saveDb(db);
-  revalidatePath('/materi');
-  revalidatePath('/admin/materi');
-  return { success: true };
+  try {
+    const deleted = await prisma.schedule.delete({
+      where: { id: slotId },
+    });
+
+    revalidatePath('/jadwal');
+    revalidatePath('/admin/jadwal');
+
+    return { success: true, data: deleted };
+  } catch (error) {
+    return { success: false, error: formatError(error) };
+  }
 }

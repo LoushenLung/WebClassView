@@ -1,11 +1,9 @@
 import React from 'react';
-import { getGalleryPosts } from '@/actions/gallery.actions';
-import { getProfiles } from '@/actions/profile.actions';
+import { getGalleries } from '@/actions/gallery.actions';
 import AdminGalleryModeration from './_components/AdminGalleryModeration';
 
 export default async function AdminGalleryPage() {
-  const posts = await getGalleryPosts();
-  const profiles = await getProfiles();
+  const galleries = await getGalleries();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -15,7 +13,7 @@ export default async function AdminGalleryPage() {
       </div>
 
       <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md">
-        <AdminGalleryModeration posts={posts} profiles={profiles} />
+        <AdminGalleryModeration galleries={galleries} />
       </div>
     </div>
   );

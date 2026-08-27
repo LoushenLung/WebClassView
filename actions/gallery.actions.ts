@@ -1,126 +1,234 @@
 'use server';
 
-import { getDb, saveDb, GalleryPost, ForumPost, ForumComment } from '@/lib/db';
+/**
+ * actions/gallery.actions.ts — Server Actions untuk Galeri Foto
+ *
+ * Req: 6.1, 6.2 | Design §7
+ *
+ * NOTE: Forum actions telah dipindah ke actions/forum.actions.ts (task 5.7).
+ */
+
 import { revalidatePath } from 'next/cache';
-import { getMockSession } from './auth.actions';
+import { prisma } from '@/lib/db';
+import { requireAuth, requireRole } from '@/lib/actions/guards';
+import { formatError } from '@/lib/utils';
+import type { ActionResult, PhotoGallery, Photo } from '@/lib/types';
+import {
+  createGallerySchema,
+  uploadPhotoSchema,
+} from '@/lib/validations/gallery';
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  GALLERY_FOLDER,
+} from '@/lib/cloudinary';
 
-// --- Gallery ---
-export async function getGalleryPosts() {
-  const db = getDb();
-  return [...db.galleryPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-export async function createGalleryPost(data: {
-  albumName: string;
-  imageUrl: string;
-  description?: string;
-}) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newPost: GalleryPost = {
-    id: 'gal-' + Math.random().toString(36).substr(2, 9),
-    albumName: data.albumName,
-    imageUrl: data.imageUrl,
-    description: data.description,
-    uploadedById: session.id,
-    createdAt: new Date().toISOString()
-  };
-  db.galleryPosts.push(newPost);
-  saveDb(db);
-  revalidatePath('/galeri');
-  revalidatePath('/admin/galeri');
-  return { success: true };
-}
+const GALLERY_PATHS = ['/galeri', '/admin/galeri'] as const;
 
-export async function deleteGalleryPost(id: string) {
-  const db = getDb();
-  db.galleryPosts = db.galleryPosts.filter(g => g.id !== id);
-  saveDb(db);
-  revalidatePath('/galeri');
-  revalidatePath('/admin/galeri');
-  return { success: true };
-}
-
-// --- Forum ---
-export async function getForumPosts() {
-  const db = getDb();
-  return [...db.forumPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export async function createForumPost(data: {
-  title: string;
-  content: string;
-  subjectName?: string;
-}) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newPost: ForumPost = {
-    id: 'forum-' + Math.random().toString(36).substr(2, 9),
-    title: data.title,
-    content: data.content,
-    subjectName: data.subjectName,
-    createdById: session.id,
-    createdAt: new Date().toISOString(),
-    upvotes: 0
-  };
-  db.forumPosts.push(newPost);
-  saveDb(db);
-  revalidatePath('/forum');
-  return { success: true };
-}
-
-export async function upvoteForumPost(id: string) {
-  const db = getDb();
-  const post = db.forumPosts.find(p => p.id === id);
-  if (post) {
-    post.upvotes += 1;
-    saveDb(db);
-    revalidatePath('/forum');
+function revalidateGalleryPaths(): void {
+  for (const path of GALLERY_PATHS) {
+    revalidatePath(path);
   }
-  return { success: true };
 }
 
-export async function deleteForumPost(id: string) {
-  const db = getDb();
-  db.forumPosts = db.forumPosts.filter(p => p.id !== id);
-  db.forumComments = db.forumComments.filter(c => c.postId !== id);
-  saveDb(db);
-  revalidatePath('/forum');
-  revalidatePath('/admin/forum');
-  return { success: true };
-}
+// ─── getGalleries ─────────────────────────────────────────────────────────────
 
-export async function getForumComments(postId: string) {
-  const db = getDb();
-  return db.forumComments.filter(c => c.postId === postId);
-}
+/**
+ * Returns all photo galleries including their photos.
+ * Requires authentication (any role).
+ */
+export async function getGalleries(): Promise<(PhotoGallery & { photos: Photo[] })[]> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return [];
 
-export async function createForumComment(postId: string, content: string) {
-  const session = await getMockSession();
-  const db = getDb();
-  const newComment: ForumComment = {
-    id: 'comm-' + Math.random().toString(36).substr(2, 9),
-    postId,
-    content,
-    createdById: session.id,
-    createdAt: new Date().toISOString(),
-    isAnswer: false
-  };
-  db.forumComments.push(newComment);
-  saveDb(db);
-  revalidatePath('/forum');
-  return { success: true };
-}
-
-export async function markCommentAsAnswer(postId: string, commentId: string) {
-  const db = getDb();
-  // Clear any existing answers on this post
-  db.forumComments.forEach(c => {
-    if (c.postId === postId) {
-      c.isAnswer = c.id === commentId ? !c.isAnswer : false;
-    }
+  return prisma.photoGallery.findMany({
+    include: { photos: true },
+    orderBy: { eventDate: 'desc' },
   });
-  saveDb(db);
-  revalidatePath('/forum');
-  return { success: true };
+}
+
+// ─── createGallery ────────────────────────────────────────────────────────────
+
+/**
+ * Creates a new photo gallery (album).
+ * Requires role: admin | bendahara.
+ */
+export async function createGallery(
+  input: unknown
+): Promise<ActionResult<PhotoGallery>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
+
+  const parsed = createGallerySchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? 'Input tidak valid.',
+    };
+  }
+
+  try {
+    const gallery = await prisma.photoGallery.create({
+      data: {
+        title: parsed.data.title,
+        description: parsed.data.description,
+        eventDate: new Date(parsed.data.eventDate),
+      },
+    });
+
+    revalidateGalleryPaths();
+    return { success: true, data: gallery };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ─── uploadPhoto ──────────────────────────────────────────────────────────────
+
+/**
+ * Uploads a photo to Cloudinary and creates a Photo record in the DB.
+ * Requires role: admin | bendahara.
+ *
+ * If the DB insert fails AFTER the Cloudinary upload,
+ * logs the error and returns failure (Cloudinary asset is left orphaned
+ * but the operation is considered failed from the caller's perspective).
+ */
+export async function uploadPhoto(
+  galleryId: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+  fileSizeBytes: number,
+  caption?: string
+): Promise<ActionResult<Photo>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
+
+  const parsed = uploadPhotoSchema.safeParse({
+    galleryId,
+    mimeType,
+    fileSizeBytes,
+    caption,
+  });
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? 'Input tidak valid.',
+    };
+  }
+
+  // Verify the gallery exists
+  const gallery = await prisma.photoGallery.findUnique({
+    where: { id: parsed.data.galleryId },
+    select: { id: true },
+  });
+  if (!gallery) {
+    return { success: false, error: 'Album tidak ditemukan.' };
+  }
+
+  // Upload to Cloudinary
+  let cloudinaryUrl: string;
+  let cloudinaryId: string;
+  try {
+    const result = await uploadToCloudinary(fileBuffer, GALLERY_FOLDER);
+    cloudinaryUrl = result.url;
+    cloudinaryId = result.publicId;
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+
+  // Insert Photo record — if this fails, log and return failure
+  try {
+    const photo = await prisma.photo.create({
+      data: {
+        galleryId: parsed.data.galleryId,
+        cloudinaryUrl,
+        cloudinaryId,
+        caption: parsed.data.caption,
+      },
+    });
+
+    revalidateGalleryPaths();
+    return { success: true, data: photo };
+  } catch (err) {
+    // DB insert failed after upload — log and return failure
+    console.error(
+      '[uploadPhoto] DB insert gagal setelah upload Cloudinary.',
+      { cloudinaryId },
+      err
+    );
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ─── deletePhoto ──────────────────────────────────────────────────────────────
+
+/**
+ * Deletes a photo from Cloudinary and removes its DB record.
+ * Requires role: admin | bendahara.
+ */
+export async function deletePhoto(
+  photoId: string
+): Promise<ActionResult<Photo>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
+
+  try {
+    const photo = await prisma.photo.findUnique({
+      where: { id: photoId },
+    });
+    if (!photo) {
+      return { success: false, error: 'Foto tidak ditemukan.' };
+    }
+
+    await deleteFromCloudinary(photo.cloudinaryId);
+
+    const deleted = await prisma.photo.delete({ where: { id: photoId } });
+
+    revalidateGalleryPaths();
+    return { success: true, data: deleted };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ─── deleteGallery ────────────────────────────────────────────────────────────
+
+/**
+ * Deletes a gallery (album) and all its photos via DB cascade.
+ * Requires role: admin | bendahara.
+ *
+ * NOTE: Cascaded Photo rows are removed by the DB constraint.
+ * Cloudinary assets are NOT individually deleted here; use deletePhoto
+ * per-photo before calling this action if you need Cloudinary cleanup.
+ */
+export async function deleteGallery(
+  galleryId: string
+): Promise<ActionResult<PhotoGallery>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+
+  const roleResult = requireRole(authResult.user, ['admin', 'bendahara']);
+  if (!roleResult.ok) return roleResult.result;
+
+  try {
+    const deleted = await prisma.photoGallery.delete({
+      where: { id: galleryId },
+    });
+
+    revalidateGalleryPaths();
+    return { success: true, data: deleted };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
 }
