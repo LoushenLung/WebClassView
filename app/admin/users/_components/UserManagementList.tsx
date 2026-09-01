@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import type { User } from '@/lib/types';
 import { updateProfile } from '@/actions/profile.actions';
-import { Shield, Trash, Save } from 'lucide-react';
+import { Shield, Save } from 'lucide-react';
 
 interface UserManagementListProps {
   users: User[];
@@ -20,7 +20,8 @@ export default function UserManagementList({ users }: UserManagementListProps) {
     setEditName(user.name);
   };
 
-  const saveEdit = (userId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const saveEdit = (_userId: string) => {
     startTransition(async () => {
       await updateProfile({ name: editName });
       setEditingUserId(null);
@@ -46,6 +47,7 @@ export default function UserManagementList({ users }: UserManagementListProps) {
               className="rounded-3xl border border-slate-200/50 bg-white p-5 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md space-y-4"
             >
               <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={
                     user.avatarUrl ||

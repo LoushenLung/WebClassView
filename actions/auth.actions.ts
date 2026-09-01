@@ -38,7 +38,7 @@ export async function signInWithEmail(
     if (!parsed.success) {
       return {
         success: false,
-        error: parsed.error.issues.map((e: { message: string }) => e.message).join(', '),
+        error: parsed.error.issues.map((issue) => issue.message).join(', '),
       };
     }
 

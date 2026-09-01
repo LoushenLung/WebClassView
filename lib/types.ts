@@ -112,4 +112,5 @@ export type {
   Material,
   ForumPost,
   ForumComment,
-} from "@prisma/client";
+  CashTransaction,
+} from "@/generated/prisma/client";

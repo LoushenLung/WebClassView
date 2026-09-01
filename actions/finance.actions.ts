@@ -13,7 +13,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import type { DuesPeriod, DuesPayment } from '@/lib/types';
+import type { DuesPeriod, DuesPayment, CashTransaction } from '@/lib/types';
 
 import { prisma } from '@/lib/db';
 import { requireAuth, requireRole } from '@/lib/actions/guards';
@@ -22,6 +22,7 @@ import { uploadToCloudinary, PROOF_FOLDER } from '@/lib/cloudinary';
 import {
   createDuesPeriodSchema,
   proofImageMetaSchema,
+  createCashTransactionSchema,
 } from '@/lib/validations/kas';
 import type { ActionResult, DuesSummaryRow } from '@/lib/types';
 
@@ -258,6 +259,74 @@ export async function getDuesSummary(): Promise<
     );
 
     return { success: true, data: rows };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ── createCashTransaction ─────────────────────────────────────────────────────
+
+/**
+ * Creates a general kas transaction (income/expense).
+ * Guards: requireAuth → requireRole(admin|bendahara)
+ */
+export async function createCashTransaction(
+  input: unknown,
+): Promise<ActionResult<CashTransaction>> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+  const { user } = authResult;
+
+  const roleResult = requireRole(user, [...ALLOWED_ROLES]);
+  if (!roleResult.ok) return roleResult.result;
+
+  const parsed = createCashTransactionSchema.safeParse(input);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? 'Input tidak valid.';
+    return { success: false, error: firstError };
+  }
+
+  const { title, amount, type, category, description } = parsed.data;
+
+  try {
+    const transaction = await prisma.cashTransaction.create({
+      data: {
+        title,
+        amount,
+        type,
+        category,
+        description,
+        createdById: user.id,
+      },
+    });
+
+    revalidateKas();
+
+    return { success: true, data: transaction };
+  } catch (err) {
+    return { success: false, error: formatError(err) };
+  }
+}
+
+// ── getCashTransactions ───────────────────────────────────────────────────────
+
+/**
+ * Retrieves all general kas transactions sorted by creation date (descending).
+ * Guards: requireAuth
+ */
+export async function getCashTransactions(): Promise<
+  ActionResult<CashTransaction[]>
+> {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.result;
+
+  try {
+    const transactions = await prisma.cashTransaction.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { createdBy: true },
+    });
+
+    return { success: true, data: transactions };
   } catch (err) {
     return { success: false, error: formatError(err) };
   }

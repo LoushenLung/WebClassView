@@ -42,6 +42,7 @@ export default function GalleryClient({ galleries }: GalleryClientProps) {
                 onClick={() => setActivePhoto(photo)}
                 className="break-inside-avoid relative overflow-hidden rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-slate-900 group cursor-pointer hover:scale-[1.01] transition-transform"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photo.cloudinaryUrl}
                   alt={photo.caption ?? activeGallery.title}
@@ -72,6 +73,7 @@ export default function GalleryClient({ galleries }: GalleryClientProps) {
               >
                 <X className="h-5 w-5" />
               </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activePhoto.cloudinaryUrl}
                 alt={activePhoto.caption ?? ''}
@@ -103,6 +105,7 @@ export default function GalleryClient({ galleries }: GalleryClientProps) {
               className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white dark:border-slate-800/50 dark:bg-slate-900 shadow-sm cursor-pointer hover:scale-[1.01] transition-transform"
             >
               {gallery.photos[0]?.cloudinaryUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={gallery.photos[0].cloudinaryUrl}
                   alt={gallery.title}

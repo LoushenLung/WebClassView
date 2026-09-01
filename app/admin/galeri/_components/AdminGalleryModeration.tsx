@@ -33,6 +33,7 @@ export default function AdminGalleryModeration({ galleries }: AdminGalleryModera
             <div key={gallery.id} className="overflow-hidden rounded-3xl border border-slate-200/50 bg-white dark:border-slate-800/50 dark:bg-slate-900 shadow-sm flex flex-col justify-between">
               <div>
                 {gallery.photos[0]?.cloudinaryUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={gallery.photos[0].cloudinaryUrl}
                     alt={gallery.title}

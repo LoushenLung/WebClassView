@@ -97,8 +97,10 @@ export function formatCurrency(amount: number): string {
  * @param date - A `Date` object or an ISO date string.
  * @returns Formatted date string, e.g. "17 Agustus 2026".
  */
-export function formatDate(date: Date | string): string {
+export function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return "-";
 
   return new Intl.DateTimeFormat("id-ID", {
     day: "numeric",

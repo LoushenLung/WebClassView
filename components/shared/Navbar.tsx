@@ -22,7 +22,7 @@ import type { User as UserType } from '@/lib/types';
 
 interface NavbarProps {
   currentUser: UserType | null;
-  allUsers: UserType[];
+  allUsers?: UserType[];
 }
 
 export default function Navbar({ currentUser }: NavbarProps) {
@@ -124,6 +124,7 @@ export default function Navbar({ currentUser }: NavbarProps) {
 
             {/* Current user badge */}
             <div className="flex items-center gap-2 rounded-full border border-indigo-200/50 bg-indigo-50/50 pl-2.5 pr-4 py-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={displayAvatar}
                 alt={displayName}

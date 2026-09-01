@@ -4,14 +4,14 @@ import React, { useState, useTransition } from 'react';
 import type { User, DuesSummaryRow } from '@/lib/types';
 import { createDuesPeriod, markPaymentPaid } from '@/actions/finance.actions';
 import { Plus, Wallet, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 interface AdminFinanceCRUDProps {
   summary: DuesSummaryRow[];
-  users: User[];
+  users?: User[];
 }
 
-export default function AdminFinanceCRUD({ summary, users }: AdminFinanceCRUDProps) {
+export default function AdminFinanceCRUD({ summary }: AdminFinanceCRUDProps) {
   const [isPending, startTransition] = useTransition();
 
   // Create period form

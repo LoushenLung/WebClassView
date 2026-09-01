@@ -243,6 +243,7 @@ export default async function HomePage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {profiles.slice(0, 8).map((user) => (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 key={user.id}
                 src={user.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80'}

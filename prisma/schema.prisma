@@ -24,6 +24,7 @@ model User {
   attendances   Attendance[]
   forumPosts    ForumPost[]
   forumComments ForumComment[]
+  cashTransactions CashTransaction[]
 
   @@index([role])
   @@map("users")
@@ -221,4 +222,23 @@ model ForumComment {
 
   @@index([postId])
   @@map("forum_comments")
+}
+
+// ── CASH TRANSACTION (GENERAL KAS INCOME/EXPENSE) ───────────
+model CashTransaction {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Int      // Rupiah, no decimals
+  type        String   // "INCOME" | "EXPENSE"
+  category    String?  // e.g. "Acara Kelas", "Perlengkapan", "Sumbangan"
+  description String?
+  createdById String   @db.Uuid @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("cash_transactions")
 }

@@ -41,3 +41,13 @@ export const proofImageMetaSchema = z.object({
 });
 
 export type ProofImageMeta = z.infer<typeof proofImageMetaSchema>;
+
+export const createCashTransactionSchema = z.object({
+  title: z.string().min(1, "Judul transaksi wajib diisi.").max(150, "Judul transaksi maksimal 150 karakter."),
+  amount: z.number().int("Jumlah harus berupa bilangan bulat.").min(1, "Jumlah harus lebih dari 0."),
+  type: z.enum(["INCOME", "EXPENSE"], { error: () => "Tipe transaksi harus INCOME atau EXPENSE." }),
+  category: z.string().max(100, "Kategori maksimal 100 karakter.").optional(),
+  description: z.string().max(500, "Deskripsi maksimal 500 karakter.").optional(),
+});
+
+export type CreateCashTransactionInput = z.infer<typeof createCashTransactionSchema>;

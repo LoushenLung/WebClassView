@@ -73,6 +73,7 @@ export default function ForumClient({ posts, currentUserId }: ForumClientProps) 
         <div className="rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900 space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activePost.author.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80'}
                 alt={activePost.author.name}
@@ -238,6 +239,7 @@ export default function ForumClient({ posts, currentUserId }: ForumClientProps) 
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={post.author.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=60&h=60'}
                       alt={post.author.name}

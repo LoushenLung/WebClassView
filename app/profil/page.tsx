@@ -19,6 +19,7 @@ export default async function ProfilePage() {
         {/* Avatar card */}
         <div className="h-fit rounded-3xl border border-slate-200/50 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-slate-900/50 backdrop-blur-md text-center space-y-4">
           <div className="relative mx-auto h-28 w-28">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={currentUser.avatarUrl ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120'}
               alt={currentUser.name}

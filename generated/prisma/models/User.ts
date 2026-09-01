@@ -204,6 +204,7 @@ export type UserWhereInput = {
   attendances?: Prisma.AttendanceListRelationFilter
   forumPosts?: Prisma.ForumPostListRelationFilter
   forumComments?: Prisma.ForumCommentListRelationFilter
+  cashTransactions?: Prisma.CashTransactionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -220,6 +221,7 @@ export type UserOrderByWithRelationInput = {
   attendances?: Prisma.AttendanceOrderByRelationAggregateInput
   forumPosts?: Prisma.ForumPostOrderByRelationAggregateInput
   forumComments?: Prisma.ForumCommentOrderByRelationAggregateInput
+  cashTransactions?: Prisma.CashTransactionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -239,6 +241,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   attendances?: Prisma.AttendanceListRelationFilter
   forumPosts?: Prisma.ForumPostListRelationFilter
   forumComments?: Prisma.ForumCommentListRelationFilter
+  cashTransactions?: Prisma.CashTransactionListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -281,6 +284,7 @@ export type UserCreateInput = {
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -297,6 +301,7 @@ export type UserUncheckedCreateInput = {
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -313,6 +318,7 @@ export type UserUpdateInput = {
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -329,6 +335,7 @@ export type UserUncheckedUpdateInput = {
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -499,6 +506,20 @@ export type UserUpdateOneRequiredWithoutForumCommentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutForumCommentsInput, Prisma.UserUpdateWithoutForumCommentsInput>, Prisma.UserUncheckedUpdateWithoutForumCommentsInput>
 }
 
+export type UserCreateNestedOneWithoutCashTransactionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashTransactionsInput, Prisma.UserUncheckedCreateWithoutCashTransactionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashTransactionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCashTransactionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashTransactionsInput, Prisma.UserUncheckedCreateWithoutCashTransactionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashTransactionsInput
+  upsert?: Prisma.UserUpsertWithoutCashTransactionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashTransactionsInput, Prisma.UserUpdateWithoutCashTransactionsInput>, Prisma.UserUncheckedUpdateWithoutCashTransactionsInput>
+}
+
 export type UserCreateWithoutDuesPaymentsInput = {
   id: string
   email: string
@@ -512,6 +533,7 @@ export type UserCreateWithoutDuesPaymentsInput = {
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDuesPaymentsInput = {
@@ -527,6 +549,7 @@ export type UserUncheckedCreateWithoutDuesPaymentsInput = {
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDuesPaymentsInput = {
@@ -558,6 +581,7 @@ export type UserUpdateWithoutDuesPaymentsInput = {
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDuesPaymentsInput = {
@@ -573,6 +597,7 @@ export type UserUncheckedUpdateWithoutDuesPaymentsInput = {
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAnnouncementsInput = {
@@ -588,6 +613,7 @@ export type UserCreateWithoutAnnouncementsInput = {
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAnnouncementsInput = {
@@ -603,6 +629,7 @@ export type UserUncheckedCreateWithoutAnnouncementsInput = {
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAnnouncementsInput = {
@@ -634,6 +661,7 @@ export type UserUpdateWithoutAnnouncementsInput = {
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAnnouncementsInput = {
@@ -649,6 +677,7 @@ export type UserUncheckedUpdateWithoutAnnouncementsInput = {
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -664,6 +693,7 @@ export type UserCreateWithoutAuditLogsInput = {
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -679,6 +709,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -710,6 +741,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -725,6 +757,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAttendancesInput = {
@@ -740,6 +773,7 @@ export type UserCreateWithoutAttendancesInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAttendancesInput = {
@@ -755,6 +789,7 @@ export type UserUncheckedCreateWithoutAttendancesInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAttendancesInput = {
@@ -786,6 +821,7 @@ export type UserUpdateWithoutAttendancesInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAttendancesInput = {
@@ -801,6 +837,7 @@ export type UserUncheckedUpdateWithoutAttendancesInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutForumPostsInput = {
@@ -816,6 +853,7 @@ export type UserCreateWithoutForumPostsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutForumPostsInput = {
@@ -831,6 +869,7 @@ export type UserUncheckedCreateWithoutForumPostsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutForumPostsInput = {
@@ -862,6 +901,7 @@ export type UserUpdateWithoutForumPostsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutForumPostsInput = {
@@ -877,6 +917,7 @@ export type UserUncheckedUpdateWithoutForumPostsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutForumCommentsInput = {
@@ -892,6 +933,7 @@ export type UserCreateWithoutForumCommentsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutForumCommentsInput = {
@@ -907,6 +949,7 @@ export type UserUncheckedCreateWithoutForumCommentsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
   forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
+  cashTransactions?: Prisma.CashTransactionUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutForumCommentsInput = {
@@ -938,6 +981,7 @@ export type UserUpdateWithoutForumCommentsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutForumCommentsInput = {
@@ -953,6 +997,87 @@ export type UserUncheckedUpdateWithoutForumCommentsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
   forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
+  cashTransactions?: Prisma.CashTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserCreateWithoutCashTransactionsInput = {
+  id: string
+  email: string
+  name: string
+  role?: string
+  avatarUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  duesPayments?: Prisma.DuesPaymentCreateNestedManyWithoutStudentInput
+  announcements?: Prisma.AnnouncementCreateNestedManyWithoutAuthorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
+  forumPosts?: Prisma.ForumPostCreateNestedManyWithoutAuthorInput
+  forumComments?: Prisma.ForumCommentCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutCashTransactionsInput = {
+  id: string
+  email: string
+  name: string
+  role?: string
+  avatarUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  duesPayments?: Prisma.DuesPaymentUncheckedCreateNestedManyWithoutStudentInput
+  announcements?: Prisma.AnnouncementUncheckedCreateNestedManyWithoutAuthorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
+  forumPosts?: Prisma.ForumPostUncheckedCreateNestedManyWithoutAuthorInput
+  forumComments?: Prisma.ForumCommentUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutCashTransactionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashTransactionsInput, Prisma.UserUncheckedCreateWithoutCashTransactionsInput>
+}
+
+export type UserUpsertWithoutCashTransactionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCashTransactionsInput, Prisma.UserUncheckedUpdateWithoutCashTransactionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashTransactionsInput, Prisma.UserUncheckedCreateWithoutCashTransactionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCashTransactionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCashTransactionsInput, Prisma.UserUncheckedUpdateWithoutCashTransactionsInput>
+}
+
+export type UserUpdateWithoutCashTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duesPayments?: Prisma.DuesPaymentUpdateManyWithoutStudentNestedInput
+  announcements?: Prisma.AnnouncementUpdateManyWithoutAuthorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
+  forumPosts?: Prisma.ForumPostUpdateManyWithoutAuthorNestedInput
+  forumComments?: Prisma.ForumCommentUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCashTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  duesPayments?: Prisma.DuesPaymentUncheckedUpdateManyWithoutStudentNestedInput
+  announcements?: Prisma.AnnouncementUncheckedUpdateManyWithoutAuthorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
+  forumPosts?: Prisma.ForumPostUncheckedUpdateManyWithoutAuthorNestedInput
+  forumComments?: Prisma.ForumCommentUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 
@@ -967,6 +1092,7 @@ export type UserCountOutputType = {
   attendances: number
   forumPosts: number
   forumComments: number
+  cashTransactions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -976,6 +1102,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   attendances?: boolean | UserCountOutputTypeCountAttendancesArgs
   forumPosts?: boolean | UserCountOutputTypeCountForumPostsArgs
   forumComments?: boolean | UserCountOutputTypeCountForumCommentsArgs
+  cashTransactions?: boolean | UserCountOutputTypeCountCashTransactionsArgs
 }
 
 /**
@@ -1030,6 +1157,13 @@ export type UserCountOutputTypeCountForumCommentsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.ForumCommentWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCashTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CashTransactionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1045,6 +1179,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   attendances?: boolean | Prisma.User$attendancesArgs<ExtArgs>
   forumPosts?: boolean | Prisma.User$forumPostsArgs<ExtArgs>
   forumComments?: boolean | Prisma.User$forumCommentsArgs<ExtArgs>
+  cashTransactions?: boolean | Prisma.User$cashTransactionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1086,6 +1221,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   attendances?: boolean | Prisma.User$attendancesArgs<ExtArgs>
   forumPosts?: boolean | Prisma.User$forumPostsArgs<ExtArgs>
   forumComments?: boolean | Prisma.User$forumCommentsArgs<ExtArgs>
+  cashTransactions?: boolean | Prisma.User$cashTransactionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1100,6 +1236,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     attendances: Prisma.$AttendancePayload<ExtArgs>[]
     forumPosts: Prisma.$ForumPostPayload<ExtArgs>[]
     forumComments: Prisma.$ForumCommentPayload<ExtArgs>[]
+    cashTransactions: Prisma.$CashTransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1509,6 +1646,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   attendances<T extends Prisma.User$attendancesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$attendancesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttendancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   forumPosts<T extends Prisma.User$forumPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$forumPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ForumPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   forumComments<T extends Prisma.User$forumCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$forumCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ForumCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  cashTransactions<T extends Prisma.User$cashTransactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2079,6 +2217,30 @@ export type User$forumCommentsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.ForumCommentScalarFieldEnum | Prisma.ForumCommentScalarFieldEnum[]
+}
+
+/**
+ * User.cashTransactions
+ */
+export type User$cashTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CashTransaction
+   */
+  select?: Prisma.CashTransactionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CashTransaction
+   */
+  omit?: Prisma.CashTransactionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CashTransactionInclude<ExtArgs> | null
+  where?: Prisma.CashTransactionWhereInput
+  orderBy?: Prisma.CashTransactionOrderByWithRelationInput | Prisma.CashTransactionOrderByWithRelationInput[]
+  cursor?: Prisma.CashTransactionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CashTransactionScalarFieldEnum | Prisma.CashTransactionScalarFieldEnum[]
 }
 
 /**

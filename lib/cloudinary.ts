@@ -13,32 +13,36 @@ import "./env";
 
 import { v2 as cloudinary } from "cloudinary";
 
-// ─── Validate Cloudinary env vars at module load ─────────────────────────────
+let isConfigured = false;
 
-const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const apiKey    = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
-const apiSecret = process.env.CLOUDINARY_API_SECRET; // NOTE: no NEXT_PUBLIC_ prefix — server-only
+function ensureConfigured(): void {
+  if (isConfigured) return;
 
-const missing = [
-  !cloudName && "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
-  !apiKey    && "NEXT_PUBLIC_CLOUDINARY_API_KEY",
-  !apiSecret && "CLOUDINARY_API_SECRET",
-].filter(Boolean);
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey    = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-if (missing.length > 0) {
-  throw new Error(
-    `Cloudinary env vars missing: ${missing.join(", ")}. Check .env.local or your Vercel project settings.`
-  );
+  const missing = [
+    !cloudName && "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
+    !apiKey    && "NEXT_PUBLIC_CLOUDINARY_API_KEY",
+    !apiSecret && "CLOUDINARY_API_SECRET",
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Cloudinary env vars missing: ${missing.join(", ")}. Check .env.local or your Vercel project settings.`
+    );
+  }
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key:    apiKey,
+    api_secret: apiSecret,
+    secure:     true,
+  });
+
+  isConfigured = true;
 }
-
-// ─── Configure Cloudinary SDK ─────────────────────────────────────────────────
-
-cloudinary.config({
-  cloud_name: cloudName,
-  api_key:    apiKey,
-  api_secret: apiSecret,
-  secure:     true,
-});
 
 // ─── Folder constants ─────────────────────────────────────────────────────────
 
@@ -59,6 +63,7 @@ export function uploadToCloudinary(
   buffer: Buffer,
   folder: string
 ): Promise<{ url: string; publicId: string }> {
+  ensureConfigured();
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, resource_type: "auto" },
@@ -83,6 +88,7 @@ export function uploadToCloudinary(
  * @throws {Error} if Cloudinary returns any result other than "ok" or "not found"
  */
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
+  ensureConfigured();
   const result = await cloudinary.uploader.destroy(publicId, {
     resource_type: "auto",
   });

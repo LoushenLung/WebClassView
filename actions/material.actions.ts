@@ -11,11 +11,11 @@ import { prisma } from '@/lib/db';
 import { requireAuth, requireRole } from '@/lib/actions/guards';
 import { formatError } from '@/lib/utils';
 import type { ActionResult, Material } from '@/lib/types';
-import { createMaterialSchema } from '@/lib/validations/material';
 import {
-  ALLOWED_MIME_TYPES,
-  MAX_FILE_SIZE_BYTES,
-} from '@/lib/validations/gallery';
+  createMaterialSchema,
+  ALLOWED_MATERIAL_MIME_TYPES,
+  MAX_MATERIAL_FILE_SIZE_BYTES,
+} from '@/lib/validations/material';
 import {
   uploadToCloudinary,
   deleteFromCloudinary,
@@ -63,19 +63,19 @@ export async function createMaterial(
     // Validate MIME type
     if (
       !fileMimeType ||
-      !(ALLOWED_MIME_TYPES as readonly string[]).includes(fileMimeType)
+      !(ALLOWED_MATERIAL_MIME_TYPES as readonly string[]).includes(fileMimeType)
     ) {
       return {
         success: false,
-        error: 'Format file harus JPEG, PNG, atau WebP.',
+        error: 'Format file tidak didukung. Gunakan PDF, PPT/X, DOC/X, ZIP/RAR, TXT, JPEG, PNG, atau WebP.',
       };
     }
 
     // Validate file size
-    if (!fileSizeBytes || fileSizeBytes > MAX_FILE_SIZE_BYTES) {
+    if (!fileSizeBytes || fileSizeBytes > MAX_MATERIAL_FILE_SIZE_BYTES) {
       return {
         success: false,
-        error: 'Ukuran file maksimal 5 MB.',
+        error: 'Ukuran file maksimal 10 MB.',
       };
     }
 
@@ -88,10 +88,13 @@ export async function createMaterial(
     }
   }
 
-  // ── Validate input, injecting resolved fileUrl if available ─────────────────
+  const baseInput =
+    typeof input === 'object' && input !== null
+      ? (input as Record<string, unknown>)
+      : {};
   const parsed = createMaterialSchema.safeParse(
     fileUrl
-      ? { ...(input as object), fileUrl, cloudinaryId }
+      ? { ...baseInput, fileUrl, cloudinaryId }
       : input
   );
   if (!parsed.success) {

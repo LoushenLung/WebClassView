@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import type { DuesSummaryRow } from '@/lib/types';
-import { Wallet, CheckCircle2, Clock, XCircle, Search } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Search } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface FinanceClientProps {

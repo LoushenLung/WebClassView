@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import type { Schedule } from '@/lib/types';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as const;
 

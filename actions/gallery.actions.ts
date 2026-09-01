@@ -222,6 +222,18 @@ export async function deleteGallery(
   if (!roleResult.ok) return roleResult.result;
 
   try {
+    // Find all associated photos to clean up Cloudinary assets before DB deletion
+    const photos = await prisma.photo.findMany({
+      where: { galleryId },
+      select: { cloudinaryId: true },
+    });
+
+    if (photos.length > 0) {
+      await Promise.allSettled(
+        photos.map((photo: { cloudinaryId: string }) => deleteFromCloudinary(photo.cloudinaryId))
+      );
+    }
+
     const deleted = await prisma.photoGallery.delete({
       where: { id: galleryId },
     });

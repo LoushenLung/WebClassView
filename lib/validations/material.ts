@@ -48,4 +48,21 @@ export const createMaterialSchema = z
     }
   });
 
+export const ALLOWED_MATERIAL_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-rar-compressed",
+  "text/plain",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
+export const MAX_MATERIAL_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export type CreateMaterialInput = z.infer<typeof createMaterialSchema>;

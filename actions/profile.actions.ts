@@ -30,7 +30,8 @@ import { uploadToCloudinary, AVATAR_FOLDER } from '@/lib/cloudinary';
 export async function updateProfile(
   input: unknown,
   avatarBuffer?: Buffer,
-  avatarMimeType?: string
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _avatarMimeType?: string
 ): Promise<ActionResult<User>> {
   const authResult = await requireAuth();
   if (!authResult.ok) return authResult.result;

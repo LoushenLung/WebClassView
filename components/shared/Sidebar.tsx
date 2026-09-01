@@ -15,7 +15,6 @@ import {
   User,
   Settings,
   Users,
-  ChevronDown,
   ChevronRight,
   Sparkles,
   Menu,
@@ -25,7 +24,7 @@ import type { User as UserType } from '@/lib/types';
 
 interface SidebarProps {
   currentUser: UserType | null;
-  allUsers: UserType[];
+  allUsers?: UserType[];
 }
 
 const userNavItems = [
@@ -58,21 +57,29 @@ const roleColors: Record<string, string> = {
   murid: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
 };
 
-export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [adminExpanded, setAdminExpanded] = useState(false);
+interface SidebarNavContentProps {
+  pathname: string;
+  adminExpanded: boolean;
+  setAdminExpanded: (val: boolean) => void;
+  onCloseMobile: () => void;
+  displayName: string;
+  displayRole: string;
+  displayAvatar: string;
+}
 
+function SidebarNavContent({
+  pathname,
+  adminExpanded,
+  setAdminExpanded,
+  onCloseMobile,
+  displayName,
+  displayRole,
+  displayAvatar,
+}: SidebarNavContentProps) {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-  const displayName = currentUser?.name ?? 'Tamu';
-  const displayRole = currentUser?.role ?? 'murid';
-  const displayAvatar =
-    currentUser?.avatarUrl ??
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80';
-
-  const SidebarContent = () => (
+  return (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-slate-800/60 px-5">
@@ -99,7 +106,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={onCloseMobile}
               className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
                 active
                   ? 'bg-indigo-600/20 text-indigo-400 shadow-sm shadow-indigo-500/10'
@@ -140,7 +147,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileOpen(false)}
+                    onClick={onCloseMobile}
                     className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
                       active
                         ? 'bg-rose-600/15 text-rose-400'
@@ -166,6 +173,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
       {/* User badge */}
       <div className="shrink-0 border-t border-slate-800/60 p-3">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={displayAvatar}
             alt={displayName}
@@ -187,12 +195,34 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
       </div>
     </div>
   );
+}
+
+export default function Sidebar({ currentUser }: SidebarProps) {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(false);
+
+  const displayName = currentUser?.name ?? 'Tamu';
+  const displayRole = currentUser?.role ?? 'murid';
+  const displayAvatar =
+    currentUser?.avatarUrl ??
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80';
+
+  const contentProps = {
+    pathname,
+    adminExpanded,
+    setAdminExpanded,
+    onCloseMobile: () => setMobileOpen(false),
+    displayName,
+    displayRole,
+    displayAvatar,
+  };
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 bg-[#0B0B1A] border-r border-slate-800/60">
-        <SidebarContent />
+        <SidebarNavContent {...contentProps} />
       </aside>
 
       {/* Mobile top bar */}
@@ -204,6 +234,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={displayAvatar}
             alt={displayName}
@@ -233,7 +264,7 @@ export default function Sidebar({ currentUser, allUsers }: SidebarProps) {
             >
               <X size={18} />
             </button>
-            <SidebarContent />
+            <SidebarNavContent {...contentProps} />
           </div>
         </>
       )}

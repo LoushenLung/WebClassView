@@ -77,3 +77,8 @@ export type ForumPost = Prisma.ForumPostModel
  * 
  */
 export type ForumComment = Prisma.ForumCommentModel
+/**
+ * Model CashTransaction
+ * 
+ */
+export type CashTransaction = Prisma.CashTransactionModel

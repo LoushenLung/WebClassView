@@ -408,7 +408,8 @@ export const ModelName = {
   Attendance: 'Attendance',
   Material: 'Material',
   ForumPost: 'ForumPost',
-  ForumComment: 'ForumComment'
+  ForumComment: 'ForumComment',
+  CashTransaction: 'CashTransaction'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -424,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "duesPeriod" | "duesPayment" | "announcement" | "schedule" | "photoGallery" | "photo" | "auditLog" | "attendance" | "material" | "forumPost" | "forumComment"
+    modelProps: "user" | "duesPeriod" | "duesPayment" | "announcement" | "schedule" | "photoGallery" | "photo" | "auditLog" | "attendance" | "material" | "forumPost" | "forumComment" | "cashTransaction"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1316,6 +1317,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CashTransaction: {
+      payload: Prisma.$CashTransactionPayload<ExtArgs>
+      fields: Prisma.CashTransactionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CashTransactionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CashTransactionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        findFirst: {
+          args: Prisma.CashTransactionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CashTransactionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        findMany: {
+          args: Prisma.CashTransactionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>[]
+        }
+        create: {
+          args: Prisma.CashTransactionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        createMany: {
+          args: Prisma.CashTransactionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CashTransactionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>[]
+        }
+        delete: {
+          args: Prisma.CashTransactionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        update: {
+          args: Prisma.CashTransactionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        deleteMany: {
+          args: Prisma.CashTransactionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CashTransactionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CashTransactionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>[]
+        }
+        upsert: {
+          args: Prisma.CashTransactionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashTransactionPayload>
+        }
+        aggregate: {
+          args: Prisma.CashTransactionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCashTransaction>
+        }
+        groupBy: {
+          args: Prisma.CashTransactionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CashTransactionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CashTransactionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CashTransactionCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1516,6 +1591,21 @@ export const ForumCommentScalarFieldEnum = {
 } as const
 
 export type ForumCommentScalarFieldEnum = (typeof ForumCommentScalarFieldEnum)[keyof typeof ForumCommentScalarFieldEnum]
+
+
+export const CashTransactionScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  amount: 'amount',
+  type: 'type',
+  category: 'category',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CashTransactionScalarFieldEnum = (typeof CashTransactionScalarFieldEnum)[keyof typeof CashTransactionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1804,6 +1894,7 @@ export type GlobalOmitConfig = {
   material?: Prisma.MaterialOmit
   forumPost?: Prisma.ForumPostOmit
   forumComment?: Prisma.ForumCommentOmit
+  cashTransaction?: Prisma.CashTransactionOmit
 }
 
 /* Types for Logging */

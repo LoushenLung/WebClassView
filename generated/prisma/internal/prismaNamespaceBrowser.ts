@@ -62,7 +62,8 @@ export const ModelName = {
   Attendance: 'Attendance',
   Material: 'Material',
   ForumPost: 'ForumPost',
-  ForumComment: 'ForumComment'
+  ForumComment: 'ForumComment',
+  CashTransaction: 'CashTransaction'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -242,6 +243,21 @@ export const ForumCommentScalarFieldEnum = {
 } as const
 
 export type ForumCommentScalarFieldEnum = (typeof ForumCommentScalarFieldEnum)[keyof typeof ForumCommentScalarFieldEnum]
+
+
+export const CashTransactionScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  amount: 'amount',
+  type: 'type',
+  category: 'category',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CashTransactionScalarFieldEnum = (typeof CashTransactionScalarFieldEnum)[keyof typeof CashTransactionScalarFieldEnum]
 
 
 export const SortOrder = {
