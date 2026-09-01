@@ -8,8 +8,6 @@
  * Req: 1.9, 13.1 | Design §8
  */
 
-"use server";
-
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
