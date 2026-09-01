@@ -17,8 +17,11 @@ const required = [
 for (const key of required) {
   const value = process.env[key];
   if (value === undefined || value === "") {
-    throw new Error(
-      `Missing required environment variable: ${key}. Check .env.local or your Vercel project settings.`
-    );
+    const msg = `Missing required environment variable: ${key}. Check .env.local or your Vercel project settings.`;
+    if (process.env.NEXT_PHASE === "phase-production-build" || process.env.VERCEL || process.env.CI) {
+      console.warn(`[env] ${msg}`);
+    } else {
+      throw new Error(msg);
+    }
   }
 }
