@@ -15,7 +15,7 @@
  */
 
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -24,6 +24,10 @@ export default defineConfig({
   },
   datasource: {
     // DIRECT_URL = port 5432, bypasses pgbouncer — required for prisma migrate
-    url: env("DIRECT_URL"),
+    // Fall back to DATABASE_URL or dummy URL during build step (prisma generate) if DIRECT_URL is missing
+    url:
+      process.env.DIRECT_URL ||
+      process.env.DATABASE_URL ||
+      "postgresql://postgres:postgres@localhost:5432/postgres",
   },
 });
