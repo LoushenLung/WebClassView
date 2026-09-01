@@ -202,6 +202,10 @@ export default function Sidebar({ currentUser }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminExpanded, setAdminExpanded] = useState(false);
 
+  if (pathname === '/login' || pathname?.startsWith('/auth')) {
+    return null;
+  }
+
   const displayName = currentUser?.name ?? 'Tamu';
   const displayRole = currentUser?.role ?? 'murid';
   const displayAvatar =

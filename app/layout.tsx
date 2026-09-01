@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "RPL 1 - Web Kelas Digital",
   description: "Class management and community hub web application for RPL 1",
@@ -26,10 +28,26 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [currentUserAuth, allUsers] = await Promise.all([
-    getCurrentUser(),
-    getProfiles(),
-  ]);
+  let currentUserAuth = null;
+  let allUsers: User[] = [];
+
+  try {
+    [currentUserAuth, allUsers] = await Promise.all([
+      getCurrentUser(),
+      getProfiles(),
+    ]);
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      typeof (err as { digest?: unknown }).digest === "string" &&
+      (err as { digest: string }).digest.includes("DYNAMIC_SERVER_USAGE")
+    ) {
+      throw err;
+    }
+    console.error("RootLayout data fetch error:", err);
+  }
 
   // Map CurrentUser → User shape expected by Sidebar (add missing fields with defaults)
   const currentUser: User | null = currentUserAuth

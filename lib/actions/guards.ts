@@ -22,33 +22,48 @@ import type { ActionResult, CurrentUser, UserRole } from "@/lib/types";
  */
 export const getCurrentUser = cache(
   async (): Promise<CurrentUser | null> => {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    if (!user) return null;
+      if (error || !user) return null;
 
-    const profile = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatarUrl: true,
-      },
-    });
+      const profile = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          avatarUrl: true,
+        },
+      });
 
-    if (!profile) return null;
+      if (!profile) return null;
 
-    return {
-      id: profile.id,
-      email: profile.email,
-      name: profile.name,
-      role: profile.role as UserRole,
-      avatarUrl: profile.avatarUrl,
-    };
+      return {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role as UserRole,
+        avatarUrl: profile.avatarUrl,
+      };
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "digest" in err &&
+        typeof (err as { digest?: unknown }).digest === "string" &&
+        (err as { digest: string }).digest.includes("DYNAMIC_SERVER_USAGE")
+      ) {
+        throw err;
+      }
+      console.error("[getCurrentUser] Error fetching user:", err);
+      return null;
+    }
   }
 );
 

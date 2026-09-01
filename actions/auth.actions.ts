@@ -67,7 +67,7 @@ export async function signInWithEmail(
 
     const role = profile?.role as UserRole | undefined;
     const redirectTo =
-      role === 'admin' || role === 'bendahara' ? '/dashboard' : '/';
+      role === 'admin' || role === 'bendahara' ? '/admin/dashboard' : '/';
 
     return { success: true, data: { redirectTo } };
   } catch (error) {
