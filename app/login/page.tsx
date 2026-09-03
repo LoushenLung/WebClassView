@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Sparkles,
@@ -19,6 +20,7 @@ function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paramError = searchParams.get('error');
+  const next = searchParams.get('next') ?? undefined;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +43,7 @@ function LoginFormContent() {
     }
 
     startTransition(async () => {
-      const res = await signInWithEmail({ email, password });
+      const res = await signInWithEmail({ email, password, next });
       if (res.success) {
         router.push(res.data.redirectTo);
         router.refresh();
@@ -55,7 +57,7 @@ function LoginFormContent() {
     setErrorMessage(null);
     setIsGooglePending(true);
     try {
-      const res = await signInWithGoogle();
+      const res = await signInWithGoogle({ next });
       if (res.success) {
         window.location.href = res.data.url;
       } else {
@@ -195,6 +197,16 @@ function LoginFormContent() {
             )}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-xs text-slate-400">
+          Belum punya akun?{' '}
+          <Link
+            href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+            className="font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
+          >
+            Daftar sekarang
+          </Link>
+        </p>
       </div>
 
       {/* Footer Info */}

@@ -1,19 +1,18 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// ── USER ─────────────────────────────────────────────────────
-// id mirrors auth.users.id (UUID), managed by Supabase Auth trigger
 model User {
   id        String   @id @db.Uuid
   email     String   @unique
   name      String
-  role      String   @default("murid")  // "admin" | "bendahara" | "murid"
+  role      String   @default("murid")
   avatarUrl String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -24,17 +23,15 @@ model User {
   attendances   Attendance[]
   forumPosts    ForumPost[]
   forumComments ForumComment[]
-  cashTransactions CashTransaction[]
 
   @@index([role])
   @@map("users")
 }
 
-// ── DUES PERIOD ──────────────────────────────────────────────
 model DuesPeriod {
   id         String   @id @default(cuid())
   name       String
-  amount     Int                          // Rupiah, no decimals — NEVER Float/Decimal
+  amount     Int
   startDate  DateTime @map("start_date")
   endDate    DateTime @map("end_date")
   isArchived Boolean  @default(false) @map("is_archived")
@@ -48,13 +45,11 @@ model DuesPeriod {
   @@map("dues_periods")
 }
 
-// ── DUES PAYMENT ─────────────────────────────────────────────
-// @@unique prevents duplicate payment per student per period
 model DuesPayment {
   id                     String    @id @default(cuid())
   studentId              String    @db.Uuid @map("student_id")
   duePeriodId            String    @map("due_period_id")
-  status                 String    @default("pending")  // "pending" | "paid" | "overdue"
+  status                 String    @default("pending")
   proofImageUrl          String?   @map("proof_image_url")
   proofImageCloudinaryId String?   @map("proof_image_cloudinary_id")
   paidAt                 DateTime? @map("paid_at")
@@ -71,13 +66,12 @@ model DuesPayment {
   @@map("dues_payments")
 }
 
-// ── ANNOUNCEMENT ─────────────────────────────────────────────
 model Announcement {
   id          String    @id @default(cuid())
   title       String
   content     String
   authorId    String    @db.Uuid @map("author_id")
-  status      String    @default("draft")   // "draft" | "published"
+  status      String    @default("draft")
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -89,13 +83,11 @@ model Announcement {
   @@map("announcements")
 }
 
-// ── SCHEDULE ─────────────────────────────────────────────────
-// @@unique on (dayOfWeek, periodOrder) — one cell per grid slot
 model Schedule {
   id          String   @id @default(cuid())
-  dayOfWeek   Int      @map("day_of_week")    // 0 = Monday … 4 = Friday
-  periodOrder Int      @map("period_order")   // 1–8
-  periodLabel String   @map("period_label")   // "08:00–09:00"
+  dayOfWeek   Int      @map("day_of_week")
+  periodOrder Int      @map("period_order")
+  periodLabel String   @map("period_label")
   subject     String?
   teacher     String?
   room        String?
@@ -107,7 +99,6 @@ model Schedule {
   @@map("schedule")
 }
 
-// ── PHOTO GALLERY + PHOTO ────────────────────────────────────
 model PhotoGallery {
   id          String   @id @default(cuid())
   title       String
@@ -136,9 +127,6 @@ model Photo {
   @@map("photos")
 }
 
-// ── AUDIT LOG ────────────────────────────────────────────────
-// userId SetNull so audit history survives user deletion
-// No INSERT/UPDATE/DELETE from app — trigger only (enforced by RLS)
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?  @db.Uuid @map("user_id")
@@ -157,13 +145,11 @@ model AuditLog {
   @@map("audit_log")
 }
 
-// ── ATTENDANCE ───────────────────────────────────────────────
-// @@unique([studentId, date]) — one record per student per day
 model Attendance {
   id          String    @id @default(cuid())
   studentId   String    @db.Uuid @map("student_id")
   date        DateTime  @db.Date
-  status      String    // "HADIR" | "IZIN" | "SAKIT" | "ALFA"
+  status      String
   checkInTime DateTime? @map("check_in_time")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -175,8 +161,6 @@ model Attendance {
   @@map("attendances")
 }
 
-// ── MATERIAL ─────────────────────────────────────────────────
-// fileUrl XOR externalLink — enforced by Zod schema, not DB constraint
 model Material {
   id           String   @id @default(cuid())
   title        String
@@ -192,7 +176,6 @@ model Material {
   @@map("materials")
 }
 
-// ── FORUM POST + COMMENT ─────────────────────────────────────
 model ForumPost {
   id          String   @id @default(cuid())
   title       String
@@ -222,23 +205,4 @@ model ForumComment {
 
   @@index([postId])
   @@map("forum_comments")
-}
-
-// ── CASH TRANSACTION (GENERAL KAS INCOME/EXPENSE) ───────────
-model CashTransaction {
-  id          String   @id @default(cuid())
-  title       String
-  amount      Int      // Rupiah, no decimals
-  type        String   // "INCOME" | "EXPENSE"
-  category    String?  // e.g. "Acara Kelas", "Perlengkapan", "Sumbangan"
-  description String?
-  createdById String   @db.Uuid @map("created_by_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
-
-  @@index([type])
-  @@index([createdAt])
-  @@map("cash_transactions")
 }

@@ -15,7 +15,7 @@ import type { ActionResult, CurrentUser, UserRole } from "@/lib/types";
 
 /**
  * Gets the current authenticated user including their role from public.users.
- * Wrapped in React cache() to deduplicate supabase.auth.getUser() calls
+ * Wrapped in React cache() to deduplicate verified claims checks
  * across multiple Server Components in the same render pass.
  *
  * Returns null if no valid session or if no matching profile row exists.
@@ -25,14 +25,15 @@ export const getCurrentUser = cache(
     try {
       const supabase = await createClient();
       const {
-        data: { user },
+        data: { claims },
         error,
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getClaims();
 
-      if (error || !user) return null;
+      const userId = claims?.sub;
+      if (error || !userId) return null;
 
       const profile = await prisma.user.findUnique({
-        where: { id: user.id },
+        where: { id: userId },
         select: {
           id: true,
           email: true,

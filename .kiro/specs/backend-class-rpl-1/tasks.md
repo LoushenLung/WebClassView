@@ -54,7 +54,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Public routes yang dikecualikan dari redirect: `/login`, `/auth/**`, `/api/ping`
     - _Req: 1.1, 1.4, 1.5 | Design §5_
 
-  - [ ] 1.6 Buat root `middleware.ts` — Route protection [S]
+  - [-] 1.6 Buat root `middleware.ts` — Route protection [S]
     - Import dan panggil `updateSession` dari `@/lib/supabase/middleware`
     - Konfigurasi `matcher` untuk exclude static files, images, favicon, sitemap, robots
     - _Req: 1.4 | Design §5_
@@ -75,7 +75,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Implementasikan `getOptimizedUrl(cloudinaryUrl, width?)` — pure string manipulation, tidak ada network call
     - _Req: 15.1–15.5 | Design §10_
 
-  - [ ] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
+  - [-] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
     - Implementasikan `getCurrentUser()` menggunakan `cache()` dari React untuk deduplicate `supabase.auth.getUser()` per render pass
     - Join dengan `prisma.user.findUnique` untuk mendapatkan `role` dari `public.users`
     - Return type: `CurrentUser | null`
@@ -88,7 +88,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 2: Database Schema & Migrations
 
 - [ ] 2. Buat dan terapkan database schema
-  - [ ] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
+  - [-] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
     - Konfigurasi `datasource db` dengan `url = env("DATABASE_URL")` (port 6543, pgbouncer) dan `directUrl = env("DIRECT_URL")` (port 5432, migrate only)
     - Definisikan semua 12 model: `User`, `DuesPeriod`, `DuesPayment`, `Announcement`, `Schedule`, `PhotoGallery`, `Photo`, `AuditLog`, `Attendance`, `Material`, `ForumPost`, `ForumComment`
     - `User.id`: `@id @db.Uuid` — mirror dari `auth.users.id`
@@ -110,7 +110,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - **Free-tier note:** Gunakan `DIRECT_URL` (port 5432) saat menjalankan migrate — pgbouncer tidak kompatibel dengan migrate
     - _Req: 3.7 | Design §3_
 
-  - [ ] 2.3 Tulis `supabase/migrations/20240101_000_rls_policies.sql` — RLS policies [L]
+  - [~] 2.3 Tulis `supabase/migrations/20240101_000_rls_policies.sql` — RLS policies [L]
     - `ENABLE ROW LEVEL SECURITY` dan `FORCE ROW LEVEL SECURITY` pada semua 12 tabel
     - Definisikan helper function `is_admin()`: `SECURITY DEFINER STABLE`, return `FALSE` jika `auth.uid() IS NULL`
     - Definisikan helper function `is_treasurer_or_admin()`: `SECURITY DEFINER STABLE`, return `FALSE` jika `auth.uid() IS NULL`
@@ -127,7 +127,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
       - `forum_posts` + `forum_comments`: all select + all insert (own) + author/treasurer delete + treasurer update (for answer)
     - _Req: 2.1–2.6 | Design §4_
 
-  - [ ] 2.4 Tulis `supabase/migrations/20240101_001_triggers.sql` — Triggers & view [M]
+  - [~] 2.4 Tulis `supabase/migrations/20240101_001_triggers.sql` — Triggers & view [M]
     - Buat SQL view `public.dues_summary` dengan join `dues_payments + users + dues_periods` dan filter `is_archived = FALSE`
     - Field view: `id, student_id, name, email, period_id, period_name, amount, status, paid_at, proof_image_url`
     - Buat function `handle_new_user()` dengan `SECURITY DEFINER` untuk auto-create `public.users` row
@@ -139,7 +139,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Attach trigger `audit_dues_payment_changes` AFTER INSERT OR UPDATE OR DELETE ON `dues_payments`
     - _Req: 1.2, 1.3, 16.1–16.3, 5.8 | Design §4_
 
-  - [ ] 2.5 Terapkan migrations ke Supabase project [M]
+  - [~] 2.5 Terapkan migrations ke Supabase project [M]
     - Jalankan migration SQL `20240101_000_rls_policies.sql` di Supabase SQL editor atau `supabase db push`
     - Jalankan migration SQL `20240101_001_triggers.sql`
     - Verifikasi semua 12 tabel ada di Supabase dashboard
@@ -201,7 +201,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 4: Authentication
 
 - [ ] 4. Implementasi authentication flows
-  - [ ] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
+  - [~] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
     - Handler `GET` yang terima `code` query param dari Supabase OAuth
     - Tukar `code` dengan session menggunakan `supabase.auth.exchangeCodeForSession(code)`
     - Jika `error` query param ada → redirect ke `/login?error=auth_failed`
@@ -253,12 +253,12 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - `getAttendanceStats(date)`: requireAuth → requireRole(["admin","bendahara"]) → hitung `studentsCount` (count users dengan role="murid"), `presentCount` (count attendances dengan status="HADIR" pada date), `attendanceRate` = (presentCount/studentsCount)*100 dengan 2 desimal → return `ActionResult<AttendanceStats>`
     - _Req: 9.1–9.12 | Design §9_
 
-  - [ ] 5.6 Buat `actions/material.actions.ts` [M]
+  - [~] 5.6 Buat `actions/material.actions.ts` [M]
     - `createMaterial(input, fileBuffer?, fileMimeType?, fileSizeBytes?)`: requireAuth → requireRole → `createMaterialSchema.safeParse()` → jika `fileBuffer` ada: upload ke Cloudinary `MATERI_FOLDER` → `prisma.material.create({ fileUrl: cloudinaryUrl, cloudinaryId: publicId, ... })`, jika external link: `prisma.material.create({ externalLink, ... })` → revalidatePath kedua routes
     - `deleteMaterial(materialId)`: requireAuth → requireRole → baca record → jika `cloudinaryId` tidak null: `deleteFromCloudinary()` → `prisma.material.delete()`, jika null: langsung delete DB
     - _Req: 10.1–10.7 | Design §9_
 
-  - [ ] 5.7 Buat `actions/forum.actions.ts` [M]
+  - [~] 5.7 Buat `actions/forum.actions.ts` [M]
     - `createPost(input)`: requireAuth (semua role) → `createPostSchema.safeParse()` → `prisma.forumPost.create({ createdById: user.id })`
     - `createComment(input)`: requireAuth → `createCommentSchema.safeParse()` → verifikasi `postId` ada di DB → `prisma.forumComment.create({ createdById: user.id })`
     - `markCommentAsAnswer(commentId)`: requireAuth → requireRole(["admin","bendahara"]) → baca `postId` dari comment → `prisma.$transaction([updateMany others isAnswer=false, update target isAnswer=true])` — ATOMIC
@@ -275,19 +275,19 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 6: API Routes & Keep-Alive
 
 - [ ] 6. Buat API routes pendukung
-  - [ ] 6.1 Buat `app/api/ping/route.ts` — Keep-alive endpoint [S]
+  - [~] 6.1 Buat `app/api/ping/route.ts` — Keep-alive endpoint [S]
     - Handler `GET` yang jalankan `prisma.$queryRaw\`SELECT 1\`` untuk keep DB connection alive
     - Return `NextResponse.json({ ok: true })` dengan status 200
     - Tidak perlu auth check — endpoint publik
     - **Free-tier note:** Endpoint ini mencegah Supabase free tier auto-pause karena inactivity
     - _Req: 17.3 | Design §12_
 
-  - [ ] 6.2 Buat `vercel.json` di root project — Cron job [S]
+  - [~] 6.2 Buat `vercel.json` di root project — Cron job [S]
     - Konfigurasi Vercel Cron untuk hit `/api/ping` setiap 5 menit: `"crons": [{ "path": "/api/ping", "schedule": "*/5 * * * *" }]`
     - **Free-tier note:** Vercel free tier mendukung cron jobs. Ini strategi utama untuk mencegah Supabase pause
     - _Req: 17.3 | Design §12_
 
-- [ ] 7. Checkpoint — Verifikasi backend dasar berfungsi
+- [~] 7. Checkpoint — Verifikasi backend dasar berfungsi
   - Pastikan `npx prisma validate` dan `npx tsc --noEmit` pass tanpa error
   - Pastikan tidak ada `any` di seluruh implementasi (jalankan `npx tsc --strict`)
   - Ensure all tests pass, ask the user if questions arise.
@@ -297,7 +297,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 7: Property-Based Tests
 
 - [ ] 8. Setup testing framework dan tulis property-based tests
-  - [ ] 8.1 Install fast-check dan konfigurasi Vitest [S]
+  - [~] 8.1 Install fast-check dan konfigurasi Vitest [S]
     - Install: `npm install --save-dev fast-check vitest @vitest/ui`
     - Buat `vitest.config.ts` di root project dengan konfigurasi TypeScript path aliases (`@/` → project root)
     - Buat `__tests__/` directory di root project
@@ -375,7 +375,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 8: Integration Verification
 
 - [ ] 9. Verifikasi integrasi end-to-end
-  - [ ] 9.1 Verifikasi full auth flow [M]
+  - [~] 9.1 Verifikasi full auth flow [M]
     - Test login email/password: form submit → session cookie di-set → redirect ke `/`
     - Test Google OAuth: click sign in → redirect ke Google → callback ke `/auth/callback` → session di-set
     - Test role-based redirect: admin/bendahara → `/dashboard`, murid → `/`
@@ -383,33 +383,33 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Test session persistence: refresh page → masih login
     - _Req: 1.1–1.9_
 
-  - [ ] 9.2 Verifikasi RLS policies [M]
+  - [~] 9.2 Verifikasi RLS policies [M]
     - Test sebagai murid: bisa SELECT data publik, tidak bisa INSERT/UPDATE/DELETE ke tabel yang dibatasi
     - Test sebagai bendahara: bisa CRUD ke kas/galeri/jadwal/pengumuman/materi
     - Test sebagai admin: bisa SELECT `audit_log`, bisa UPDATE role user
     - Test direct INSERT ke `audit_log` → harus ditolak
     - _Req: 2.1–2.6_
 
-  - [ ] 9.3 Verifikasi Cloudinary integration [M]
+  - [~] 9.3 Verifikasi Cloudinary integration [M]
     - Upload foto galeri → verifikasi URL tersimpan di DB dengan format `cloudinaryUrl` yang benar
     - Akses `getOptimizedUrl()` → verifikasi transform string `/upload/w_400,c_fill,q_auto,f_auto/` ada di URL
     - Delete foto → verifikasi Cloudinary asset terhapus dan row DB terhapus
     - **Free-tier note:** Cloudinary free tier limit 25GB storage dan 25 credit/bulan — test upload/delete tidak menghabiskan quota signifikan
     - _Req: 6.3–6.6, 15.1–15.5_
 
-  - [ ] 9.4 Verifikasi audit trail [S]
+  - [~] 9.4 Verifikasi audit trail [S]
     - Mark payment sebagai paid via `markPaymentPaid()` → verifikasi satu row `audit_log` dengan `action="payment_updated"`, `old_values.status="pending"`, `new_values.status="paid"`
     - Verifikasi murid tidak bisa SELECT `audit_log`
     - _Req: 16.1–16.5_
 
-  - [ ] 9.5 Verifikasi Prisma singleton dan keep-alive [S]
+  - [~] 9.5 Verifikasi Prisma singleton dan keep-alive [S]
     - Akses beberapa halaman berbeda dalam satu session → verifikasi tidak ada error `P2024` (connection pool exhaustion) di logs
     - Hit `GET /api/ping` → verifikasi response `{ ok: true }` dengan status 200
     - Verifikasi `prisma.$queryRaw\`SELECT 1\`` berhasil dieksekusi
     - **Free-tier note:** Dengan `connection_limit=1` di `DATABASE_URL`, Lambda tidak akan exhausts pool bahkan di concurrent invocations
     - _Req: 17.5 | Design §12_
 
-- [ ] 10. Final checkpoint — Backend siap
+- [~] 10. Final checkpoint — Backend siap
   - Jalankan `npx tsc --noEmit` → zero errors
   - Jalankan `npx vitest --run` → semua tests pass (atau optional tests di-skip)
   - Verifikasi tidak ada `any` di seluruh codebase: `grep -r ": any" lib/ actions/`

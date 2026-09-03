@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import type { User as UserType } from '@/lib/types';
+import LogoutButton from '@/components/auth/LogoutButton';
 
 interface SidebarProps {
   currentUser: UserType | null;
@@ -192,6 +193,7 @@ function SidebarNavContent({
             </div>
           </div>
         </div>
+        <LogoutButton className="mt-2" />
       </div>
     </div>
   );
