@@ -16,7 +16,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 
 ### Group 1: Foundation & Infrastructure
 
-- [ ] 1. Buat file foundation dan infrastruktur dasar
+- [x] 1. Buat file foundation dan infrastruktur dasar
   - [x] 1.1 Buat `lib/types.ts` — Type system terpusat [M]
     - Definisikan `ActionResult<T>` sebagai discriminated union `{ success: true; data: T } | { success: false; error: string }`
     - Definisikan `UserRole = "admin" | "bendahara" | "murid"`
@@ -54,7 +54,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Public routes yang dikecualikan dari redirect: `/login`, `/auth/**`, `/api/ping`
     - _Req: 1.1, 1.4, 1.5 | Design §5_
 
-  - [-] 1.6 Buat root `middleware.ts` — Route protection [S]
+  - [x] 1.6 Buat root `middleware.ts` — Route protection [S]
     - Import dan panggil `updateSession` dari `@/lib/supabase/middleware`
     - Konfigurasi `matcher` untuk exclude static files, images, favicon, sitemap, robots
     - _Req: 1.4 | Design §5_
@@ -75,7 +75,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Implementasikan `getOptimizedUrl(cloudinaryUrl, width?)` — pure string manipulation, tidak ada network call
     - _Req: 15.1–15.5 | Design §10_
 
-  - [-] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
+  - [x] 1.9 Buat `lib/actions/guards.ts` — Auth & role helpers [M]
     - Implementasikan `getCurrentUser()` menggunakan `cache()` dari React untuk deduplicate `supabase.auth.getUser()` per render pass
     - Join dengan `prisma.user.findUnique` untuk mendapatkan `role` dari `public.users`
     - Return type: `CurrentUser | null`
@@ -88,7 +88,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 2: Database Schema & Migrations
 
 - [ ] 2. Buat dan terapkan database schema
-  - [-] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
+  - [x] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
     - Konfigurasi `datasource db` dengan `url = env("DATABASE_URL")` (port 6543, pgbouncer) dan `directUrl = env("DIRECT_URL")` (port 5432, migrate only)
     - Definisikan semua 12 model: `User`, `DuesPeriod`, `DuesPayment`, `Announcement`, `Schedule`, `PhotoGallery`, `Photo`, `AuditLog`, `Attendance`, `Material`, `ForumPost`, `ForumComment`
     - `User.id`: `@id @db.Uuid` — mirror dari `auth.users.id`
@@ -110,7 +110,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - **Free-tier note:** Gunakan `DIRECT_URL` (port 5432) saat menjalankan migrate — pgbouncer tidak kompatibel dengan migrate
     - _Req: 3.7 | Design §3_
 
-  - [~] 2.3 Tulis `supabase/migrations/20240101_000_rls_policies.sql` — RLS policies [L]
+  - [x] 2.3 Tulis `supabase/migrations/20240101_000_rls_policies.sql` — RLS policies [L]
     - `ENABLE ROW LEVEL SECURITY` dan `FORCE ROW LEVEL SECURITY` pada semua 12 tabel
     - Definisikan helper function `is_admin()`: `SECURITY DEFINER STABLE`, return `FALSE` jika `auth.uid() IS NULL`
     - Definisikan helper function `is_treasurer_or_admin()`: `SECURITY DEFINER STABLE`, return `FALSE` jika `auth.uid() IS NULL`
@@ -127,7 +127,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
       - `forum_posts` + `forum_comments`: all select + all insert (own) + author/treasurer delete + treasurer update (for answer)
     - _Req: 2.1–2.6 | Design §4_
 
-  - [~] 2.4 Tulis `supabase/migrations/20240101_001_triggers.sql` — Triggers & view [M]
+  - [x] 2.4 Tulis `supabase/migrations/20240101_001_triggers.sql` — Triggers & view [M]
     - Buat SQL view `public.dues_summary` dengan join `dues_payments + users + dues_periods` dan filter `is_archived = FALSE`
     - Field view: `id, student_id, name, email, period_id, period_name, amount, status, paid_at, proof_image_url`
     - Buat function `handle_new_user()` dengan `SECURITY DEFINER` untuk auto-create `public.users` row
@@ -139,7 +139,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Attach trigger `audit_dues_payment_changes` AFTER INSERT OR UPDATE OR DELETE ON `dues_payments`
     - _Req: 1.2, 1.3, 16.1–16.3, 5.8 | Design §4_
 
-  - [~] 2.5 Terapkan migrations ke Supabase project [M]
+  - [ ] 2.5 Terapkan migrations ke Supabase project [M]
     - Jalankan migration SQL `20240101_000_rls_policies.sql` di Supabase SQL editor atau `supabase db push`
     - Jalankan migration SQL `20240101_001_triggers.sql`
     - Verifikasi semua 12 tabel ada di Supabase dashboard
@@ -201,7 +201,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 4: Authentication
 
 - [ ] 4. Implementasi authentication flows
-  - [~] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
+  - [ ] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
     - Handler `GET` yang terima `code` query param dari Supabase OAuth
     - Tukar `code` dengan session menggunakan `supabase.auth.exchangeCodeForSession(code)`
     - Jika `error` query param ada → redirect ke `/login?error=auth_failed`
