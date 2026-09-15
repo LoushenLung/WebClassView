@@ -247,6 +247,18 @@ exports.Prisma.ForumCommentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CashTransactionScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  amount: 'amount',
+  type: 'type',
+  category: 'category',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -286,7 +298,8 @@ exports.Prisma.ModelName = {
   Attendance: 'Attendance',
   Material: 'Material',
   ForumPost: 'ForumPost',
-  ForumComment: 'ForumComment'
+  ForumComment: 'ForumComment',
+  CashTransaction: 'CashTransaction'
 };
 
 /**

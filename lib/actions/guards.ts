@@ -25,11 +25,11 @@ export const getCurrentUser = cache(
     try {
       const supabase = await createClient();
       const {
-        data: { claims },
+        data,
         error,
       } = await supabase.auth.getClaims();
 
-      const userId = claims?.sub;
+      const userId = data?.claims?.sub;
       if (error || !userId) return null;
 
       const profile = await prisma.user.findUnique({

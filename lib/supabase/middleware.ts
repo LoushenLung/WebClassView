@@ -62,10 +62,10 @@ export async function updateSession(request: NextRequest) {
     // Do not add logic between createServerClient and getClaims: this call is
     // responsible for both token refresh and trusted JWT verification.
     const {
-      data: { claims },
+      data,
       error,
     } = await supabase.auth.getClaims();
-    const isAuthenticated = !error && Boolean(claims?.sub);
+    const isAuthenticated = !error && Boolean(data?.claims?.sub);
 
     if (!isAuthenticated && !isPublicRoute) {
       const url = request.nextUrl.clone();

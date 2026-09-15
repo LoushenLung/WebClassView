@@ -16,12 +16,13 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  duesPayments  DuesPayment[]
-  announcements Announcement[]
-  auditLogs     AuditLog[]
-  attendances   Attendance[]
-  forumPosts    ForumPost[]
-  forumComments ForumComment[]
+  duesPayments     DuesPayment[]
+  announcements    Announcement[]
+  auditLogs        AuditLog[]
+  attendances      Attendance[]
+  forumPosts       ForumPost[]
+  forumComments    ForumComment[]
+  cashTransactions CashTransaction[]
 
   @@index([role])
   @@map("users")
@@ -204,4 +205,22 @@ model ForumComment {
 
   @@index([postId])
   @@map("forum_comments")
+}
+
+model CashTransaction {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Int
+  type        String // "INCOME" | "EXPENSE"
+  category    String?
+  description String?
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("cash_transactions")
 }
