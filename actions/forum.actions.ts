@@ -189,6 +189,7 @@ export async function markCommentAsAnswer(
     ]);
 
     revalidatePath('/forum');
+    revalidatePath('/admin/forum');
     return { success: true, data: updated };
   } catch (error) {
     return { success: false, error: formatError(error) };
@@ -268,6 +269,7 @@ export async function deleteComment(
     });
 
     revalidatePath('/forum');
+    revalidatePath('/admin/forum');
     return { success: true, data: deleted };
   } catch (error) {
     return { success: false, error: formatError(error) };

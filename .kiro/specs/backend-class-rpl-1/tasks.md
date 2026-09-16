@@ -87,7 +87,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 
 ### Group 2: Database Schema & Migrations
 
-- [ ] 2. Buat dan terapkan database schema
+- [x] 2. Buat dan terapkan database schema
   - [x] 2.1 Tulis `prisma/schema.prisma` — Complete schema [L]
     - Konfigurasi `datasource db` dengan `url = env("DATABASE_URL")` (port 6543, pgbouncer) dan `directUrl = env("DIRECT_URL")` (port 5432, migrate only)
     - Definisikan semua 12 model: `User`, `DuesPeriod`, `DuesPayment`, `Announcement`, `Schedule`, `PhotoGallery`, `Photo`, `AuditLog`, `Attendance`, `Material`, `ForumPost`, `ForumComment`
@@ -139,7 +139,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Attach trigger `audit_dues_payment_changes` AFTER INSERT OR UPDATE OR DELETE ON `dues_payments`
     - _Req: 1.2, 1.3, 16.1–16.3, 5.8 | Design §4_
 
-  - [ ] 2.5 Terapkan migrations ke Supabase project [M]
+  - [x] 2.5 Terapkan migrations ke Supabase project [M]
     - Jalankan migration SQL `20240101_000_rls_policies.sql` di Supabase SQL editor atau `supabase db push`
     - Jalankan migration SQL `20240101_001_triggers.sql`
     - Verifikasi semua 12 tabel ada di Supabase dashboard
@@ -200,8 +200,8 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 
 ### Group 4: Authentication
 
-- [ ] 4. Implementasi authentication flows
-  - [ ] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
+- [x] 4. Implementasi authentication flows
+  - [x] 4.1 Buat `app/api/auth/callback/route.ts` — OAuth callback handler [M]
     - Handler `GET` yang terima `code` query param dari Supabase OAuth
     - Tukar `code` dengan session menggunakan `supabase.auth.exchangeCodeForSession(code)`
     - Jika `error` query param ada → redirect ke `/login?error=auth_failed`
@@ -220,7 +220,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 
 ### Group 5: Feature Server Actions
 
-- [ ] 5. Implementasi Server Actions per domain
+- [x] 5. Implementasi Server Actions per domain
   - [x] 5.1 Buat/update `actions/finance.actions.ts` [L]
     - `createDuesPeriod(input: unknown)`: requireAuth → requireRole(["admin","bendahara"]) → `createDuesPeriodSchema.safeParse()` → cek duplikasi nama (case-insensitive) → `prisma.duesPeriod.create()` → `revalidatePath("/kas")` + `revalidatePath("/admin/kas")`
     - `archiveDuesPeriod(periodId: string)`: requireAuth → requireRole → `prisma.duesPeriod.update({ isArchived: true })` → revalidatePath
@@ -253,12 +253,12 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - `getAttendanceStats(date)`: requireAuth → requireRole(["admin","bendahara"]) → hitung `studentsCount` (count users dengan role="murid"), `presentCount` (count attendances dengan status="HADIR" pada date), `attendanceRate` = (presentCount/studentsCount)*100 dengan 2 desimal → return `ActionResult<AttendanceStats>`
     - _Req: 9.1–9.12 | Design §9_
 
-  - [~] 5.6 Buat `actions/material.actions.ts` [M]
+  - [x] 5.6 Buat `actions/material.actions.ts` [M]
     - `createMaterial(input, fileBuffer?, fileMimeType?, fileSizeBytes?)`: requireAuth → requireRole → `createMaterialSchema.safeParse()` → jika `fileBuffer` ada: upload ke Cloudinary `MATERI_FOLDER` → `prisma.material.create({ fileUrl: cloudinaryUrl, cloudinaryId: publicId, ... })`, jika external link: `prisma.material.create({ externalLink, ... })` → revalidatePath kedua routes
     - `deleteMaterial(materialId)`: requireAuth → requireRole → baca record → jika `cloudinaryId` tidak null: `deleteFromCloudinary()` → `prisma.material.delete()`, jika null: langsung delete DB
     - _Req: 10.1–10.7 | Design §9_
 
-  - [~] 5.7 Buat `actions/forum.actions.ts` [M]
+  - [x] 5.7 Buat `actions/forum.actions.ts` [M]
     - `createPost(input)`: requireAuth (semua role) → `createPostSchema.safeParse()` → `prisma.forumPost.create({ createdById: user.id })`
     - `createComment(input)`: requireAuth → `createCommentSchema.safeParse()` → verifikasi `postId` ada di DB → `prisma.forumComment.create({ createdById: user.id })`
     - `markCommentAsAnswer(commentId)`: requireAuth → requireRole(["admin","bendahara"]) → baca `postId` dari comment → `prisma.$transaction([updateMany others isAnswer=false, update target isAnswer=true])` — ATOMIC
@@ -275,14 +275,14 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 6: API Routes & Keep-Alive
 
 - [ ] 6. Buat API routes pendukung
-  - [~] 6.1 Buat `app/api/ping/route.ts` — Keep-alive endpoint [S]
+  - [x] 6.1 Buat `app/api/ping/route.ts` — Keep-alive endpoint [S]
     - Handler `GET` yang jalankan `prisma.$queryRaw\`SELECT 1\`` untuk keep DB connection alive
     - Return `NextResponse.json({ ok: true })` dengan status 200
     - Tidak perlu auth check — endpoint publik
     - **Free-tier note:** Endpoint ini mencegah Supabase free tier auto-pause karena inactivity
     - _Req: 17.3 | Design §12_
 
-  - [~] 6.2 Buat `vercel.json` di root project — Cron job [S]
+  - [x] 6.2 Buat `vercel.json` di root project — Cron job [S]
     - Konfigurasi Vercel Cron untuk hit `/api/ping` setiap 5 menit: `"crons": [{ "path": "/api/ping", "schedule": "*/5 * * * *" }]`
     - **Free-tier note:** Vercel free tier mendukung cron jobs. Ini strategi utama untuk mencegah Supabase pause
     - _Req: 17.3 | Design §12_
@@ -297,14 +297,14 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
 ### Group 7: Property-Based Tests
 
 - [ ] 8. Setup testing framework dan tulis property-based tests
-  - [~] 8.1 Install fast-check dan konfigurasi Vitest [S]
+  - [x] 8.1 Install fast-check dan konfigurasi Vitest [S]
     - Install: `npm install --save-dev fast-check vitest @vitest/ui`
     - Buat `vitest.config.ts` di root project dengan konfigurasi TypeScript path aliases (`@/` → project root)
     - Buat `__tests__/` directory di root project
     - Verifikasi `npx vitest --run` berjalan tanpa error
     - _Design §14_
 
-  - [ ]* 8.2 Tulis Property 1 — DuesPeriod date ordering invariant [M]
+  - [-] 8.2 Tulis Property 1 — DuesPeriod date ordering invariant [M]
     - **Property 1: DuesPeriod date ordering invariant**
     - **Validates: Req 4.2**
     - File: `__tests__/validations/kas.property.test.ts`
@@ -314,7 +314,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 1: DuesPeriod date ordering invariant`
     - _Design §14, Property 1_
 
-  - [ ]* 8.3 Tulis Property 2 — Unique payment constraint [M]
+  - [-] 8.3 Tulis Property 2 — Unique payment constraint [M]
     - **Property 2: Unique payment constraint — no duplicate payments**
     - **Validates: Req 3.3, 5.1**
     - File: `__tests__/db/payment-unique.property.test.ts`
@@ -323,7 +323,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 2: Unique payment constraint`
     - _Design §14, Property 2_
 
-  - [ ]* 8.4 Tulis Property 3 — File upload validation universality [M]
+  - [-] 8.4 Tulis Property 3 — File upload validation universality [M]
     - **Property 3: File upload validation universality**
     - **Validates: Req 6.1, 6.2, 5.2**
     - File: `__tests__/validations/gallery.property.test.ts`
@@ -333,7 +333,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 3: File upload validation universality`
     - _Design §14, Property 3_
 
-  - [ ]* 8.5 Tulis Property 4 — Material XOR constraint [M]
+  - [-] 8.5 Tulis Property 4 — Material XOR constraint [M]
     - **Property 4: Material XOR constraint**
     - **Validates: Req 10.1**
     - File: `__tests__/validations/material.property.test.ts`
@@ -343,7 +343,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 4: Material XOR constraint`
     - _Design §14, Property 4_
 
-  - [ ]* 8.6 Tulis Property 5 — Forum answer uniqueness invariant [M]
+  - [-] 8.6 Tulis Property 5 — Forum answer uniqueness invariant [M]
     - **Property 5: Forum answer uniqueness invariant**
     - **Validates: Req 11.3**
     - File: `__tests__/actions/forum.property.test.ts`
@@ -352,7 +352,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 5: Forum answer uniqueness invariant`
     - _Design §14, Property 5_
 
-  - [ ]* 8.7 Tulis Property 6 — Schedule isBreak conditional validation [S]
+  - [~] 8.7 Tulis Property 6 — Schedule isBreak conditional validation [S]
     - **Property 6: Schedule isBreak conditional validation**
     - **Validates: Req 8.2**
     - File: `__tests__/validations/schedule.property.test.ts`
@@ -361,7 +361,7 @@ Rencana implementasi ini menggantikan mock in-memory database (`getDb/saveDb`) d
     - Tag: `// Feature: backend-class-rpl-1, Property 6: Schedule isBreak conditional validation`
     - _Design §14, Property 6_
 
-  - [ ]* 8.8 Tulis Property 7 — Audit trail completeness [M]
+  - [~] 8.8 Tulis Property 7 — Audit trail completeness [M]
     - **Property 7: Audit trail completeness**
     - **Validates: Req 16.1, 16.2, 16.3**
     - File: `__tests__/db/audit-trail.property.test.ts`
